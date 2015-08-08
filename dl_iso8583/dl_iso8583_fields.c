@@ -54,7 +54,7 @@ DL_ERR _unpack( DL_UINT16                    iField,
                 DL_UINT8                   **ioPtr );
 
 
-DL_ERR _packLenAscii();
+DL_ERR _packLenAscii(DL_UINT32, DL_UINT8, DL_UINT8 **);
 DL_ERR _packAscii();
 DL_ERR _unpackLenAscii();
 DL_ERR _unpackAscii();
@@ -72,10 +72,6 @@ static DL_ERR VarLen_Put ( DL_UINT8    iVarLenType,
                            DL_UINT32   iActLen,
                            DL_UINT32  *ioReqLen,
                            DL_UINT8  **ioPtr );
-static DL_ERR VarLen_Put_ex ( DL_UINT8    iVarLenType,
-                              DL_UINT32   iActLen,
-                              DL_UINT32  *ioReqLen,
-                              DL_UINT8  **ioPtr );
 
 
 // determines variable length element
@@ -83,10 +79,6 @@ static DL_ERR VarLen_Get ( const DL_UINT8 **ioPtr,
                            DL_UINT8         iVarLenDigits,
                            DL_UINT16        iMaxValue,
                            DL_UINT16       *oLen );
-static DL_ERR VarLen_Get_ex ( const DL_UINT8 **ioPtr,
-                              DL_UINT8         iVarLenDigits,
-                              DL_UINT16        iMaxValue,
-                              DL_UINT16       *oLen );
 
 
 /******************************************************************************/
@@ -202,8 +194,7 @@ DL_ERR _pack_iso_BITMAP ( DL_UINT16                    iField,
     int        i;
 
     /* for each possible bitmap segment */
-    for ( i=0 ; i<((kDL_ISO8583_MAX_FIELD_IDX-iField+1)+63)/64 ; i++ )
-    {
+    for ( i=0 ; i<((kDL_ISO8583_MAX_FIELD_IDX-iField+1)+63)/64 ; i++ ) {
         DL_UINT32 ms=0,
                 ls=0;
         int       j;
@@ -212,16 +203,14 @@ DL_ERR _pack_iso_BITMAP ( DL_UINT16                    iField,
         if(i == 0)
             curFieldIdx++;
 
-        for ( j=0 ; j<31 + i ; j++,curFieldIdx++ )
-        {
+        for ( j=0 ; j<31 + i ; j++,curFieldIdx++ ) {
             ms <<= 1;
             if ( (curFieldIdx <= kDL_ISO8583_MAX_FIELD_IDX) &&
                  (NULL != iMsg->field[curFieldIdx].ptr) )
                 ms++;
         }
 
-        for ( j=0 ; j<32 ; j++,curFieldIdx++ )
-        {
+        for ( j=0 ; j<32 ; j++,curFieldIdx++ ) {
             ls <<= 1;
             if ( (curFieldIdx <= kDL_ISO8583_MAX_FIELD_IDX) &&
                  (NULL != iMsg->field[curFieldIdx].ptr) )
@@ -229,26 +218,20 @@ DL_ERR _pack_iso_BITMAP ( DL_UINT16                    iField,
         }
 
         /* output bitmap segment (if required) */
-        if ( 0 == i )
-        {
+        if ( 0 == i ) {
             /* NB 1st segment is always output */
             DL_UINT32_TO_BYTES(ms,tmpPtr);
             DL_UINT32_TO_BYTES(ls,tmpPtr+4);
             tmpPtr += 8;
-        }
-        else
-        {
-            if ( ms || ls )
-            {
+        } else {
+            if ( ms || ls ) {
                 /* set continuation bit of previous segment */
                 *(tmpPtr-8) |= 0x80;
 
                 DL_UINT32_TO_BYTES(ms,tmpPtr);
                 DL_UINT32_TO_BYTES(ls,tmpPtr+4);
                 tmpPtr += 8;
-            }
-            else
-            {
+            } else {
                 /* no fields present, so don't output */
                 break;
             }
@@ -275,8 +258,7 @@ DL_ERR _unpack_iso_BITMAP ( DL_UINT16                    iField,
         DL_UINT16 curFieldIdx = iField;
 
         /* for each bitmap segment (8 bytes) */
-        while(i<(((kDL_ISO8583_MAX_FIELD_IDX-iField+1)+63)/64))
-        {
+        while(i<(((kDL_ISO8583_MAX_FIELD_IDX-iField+1)+63)/64)) {
             DL_UINT32 ms,ls;
             int       j;
 
@@ -290,10 +272,8 @@ DL_ERR _unpack_iso_BITMAP ( DL_UINT16                    iField,
                 curFieldIdx++;
 
             /* ms part */
-            for ( j=30 + i ; j>=0 ; j--,curFieldIdx++ )
-            {
-                if ( DL_BIT_TEST(ms,j) )
-                {
+            for ( j=30 + i ; j>=0 ; j--,curFieldIdx++ ) {
+                if ( DL_BIT_TEST(ms,j) ) {
                     if ( curFieldIdx > kDL_ISO8583_MAX_FIELD_IDX )
                         return kDL_ERR_OTHER;
 
@@ -303,10 +283,8 @@ DL_ERR _unpack_iso_BITMAP ( DL_UINT16                    iField,
             } /* end-for(j) */
 
             /* ls part */
-            for ( j=31 ; j>=0 ; j--,curFieldIdx++ )
-            {
-                if ( DL_BIT_TEST(ls,j) )
-                {
+            for ( j=31 ; j>=0 ; j--,curFieldIdx++ ) {
+                if ( DL_BIT_TEST(ls,j) ) {
                     if ( curFieldIdx > kDL_ISO8583_MAX_FIELD_IDX )
                         return kDL_ERR_OTHER;
 
@@ -316,8 +294,7 @@ DL_ERR _unpack_iso_BITMAP ( DL_UINT16                    iField,
             } /* end-for(j) */
 
             /* stop if no more bitmap segments */
-            if( i == 0)
-            {
+            if( i == 0) {
                 if ( 0 == DL_BIT_TEST(ms,31) )
                     break;
             }
