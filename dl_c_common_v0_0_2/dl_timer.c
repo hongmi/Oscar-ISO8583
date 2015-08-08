@@ -39,60 +39,60 @@ static DL_UINT32 getMSec ( void );
 
 void DL_TIMER_Start ( DL_TIMER *oTimer )
 {
-	/* init outputs */
-	DL_MEM_memset(oTimer,0,sizeof(DL_TIMER));
+    /* init outputs */
+    DL_MEM_memset(oTimer,0,sizeof(DL_TIMER));
 
-	/* record seconds */
-	oTimer->sec = DL_TIME_GetUTCSeconds();
+    /* record seconds */
+    oTimer->sec = DL_TIME_GetUTCSeconds();
 
-	/* record micro-seconds */
-	oTimer->msec = getMSec();
+    /* record micro-seconds */
+    oTimer->msec = getMSec();
 
-	return;
+    return;
 }
 
 /******************************************************************************/
 
 DL_UINT32 DL_TIMER_GetDuration ( DL_TIMER iTimer )
 {
-	DL_UINT32 durMs    = 0;
-	DL_TIMER  tmpTimer;
+    DL_UINT32 durMs    = 0;
+    DL_TIMER  tmpTimer;
 
-	/* start temp timer (to determine current time) */
-	DL_TIMER_Start(&tmpTimer);
+    /* start temp timer (to determine current time) */
+    DL_TIMER_Start(&tmpTimer);
 
-	/* calculate millisecond difference between current and original timer */
-	durMs = ( ((tmpTimer.sec - iTimer.sec) * 1000) +
-		      ((tmpTimer.msec - iTimer.msec) % 1000) )
-			& DL_MAX_UINT32;
+    /* calculate millisecond difference between current and original timer */
+    durMs = ( ((tmpTimer.sec - iTimer.sec) * 1000) +
+              ((tmpTimer.msec - iTimer.msec) % 1000) )
+        & DL_MAX_UINT32;
 
-	return durMs;
+    return durMs;
 }
 
 /******************************************************************************/
 
 static DL_UINT32 getMSec ( void )
 {
-	DL_UINT32 ret = 0;
+    DL_UINT32 ret = 0;
 
 #if defined(DL_WIN32)
-	{
-		ret = (DL_UINT32)(GetTickCount() % 1000);
-	}
+    {
+        ret = (DL_UINT32)(GetTickCount() % 1000);
+    }
 #elif defined(DL_UNIX)
-	{
-		struct timeval tv;
-		struct timezone tz;
+    {
+        struct timeval tv;
+        struct timezone tz;
 
-		gettimeofday(&tv, &tz);
+        gettimeofday(&tv, &tz);
 
-		ret = (DL_UINT32)((tv.tv_usec / 1000) % 1000);
-	}
+        ret = (DL_UINT32)((tv.tv_usec / 1000) % 1000);
+    }
 #else
 #error Platform Not Supported
 #endif
 
-	return ret;
+    return ret;
 }
 
 /******************************************************************************/

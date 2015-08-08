@@ -45,19 +45,19 @@ extern DL_CHAR kDL_STR_EmptyStr[1];
 //
 
 /* returns an empty string if the pointer is NULL */
-#define DL_STR_SafeStr(str)\
- ((str)==NULL?kDL_STR_EmptyStr:(str))
+#define DL_STR_SafeStr(str)                     \
+    ((str)==NULL?kDL_STR_EmptyStr:(str))
 
 /* accepts a pointer to a numeric - outputs safe values (ie 0 if NULL) */
-#define DL_STR_SafeNum(a)\
- ((a)==NULL?0:*(a))
+#define DL_STR_SafeNum(a)                       \
+    ((a)==NULL?0:*(a))
 
-#define DL_STR_StrChr	strchr
+#define DL_STR_StrChr   strchr
 
 /* returns 1 if character is whitespace / 0 otherwise */
 /* NB whitespace: 0x09-0x0D or 0x20 */
-#define DL_STR_IsWS(iCh)\
- ((((iCh)>=kDL_ASCII_HT)&&((iCh)<=kDL_ASCII_CR))||((iCh)==kDL_ASCII_SP) )
+#define DL_STR_IsWS(iCh)                                                \
+    ((((iCh)>=kDL_ASCII_HT)&&((iCh)<=kDL_ASCII_CR))||((iCh)==kDL_ASCII_SP) )
 
 /******************************************************************************/
 
@@ -78,16 +78,16 @@ int DL_STR_StrLenExWS ( const DL_CHAR *iStr );
 /* compares two strings                                     */
 /* returns: -1 if str1<str2, 0 if str1=str2, 1 if str1>str2 */
 int DL_STR_StrCmp ( const DL_CHAR *iStr1,
-			        const DL_CHAR *iStr2,
-				    int            iIgnoreCase );
+                    const DL_CHAR *iStr2,
+                    int            iIgnoreCase );
 
 /* compares two string up to maximum length (iMaxChars)     */
 /* returns: -1 if str1<str2, 0 if str1=str2, 1 if str1>str2 */
 /* NB compares at most 'maxCompareChars'                    */
 int DL_STR_StrNCmp ( const DL_CHAR *iStr1,
-				     const DL_CHAR *iStr2,
-				     int            iIgnoreCase,
-				     int            iMaxChars );
+                     const DL_CHAR *iStr2,
+                     int            iIgnoreCase,
+                     int            iMaxChars );
 
 /******************************************************************************/
 
@@ -96,40 +96,40 @@ int DL_STR_StrNCmp ( const DL_CHAR *iStr1,
 /* returns: n/a                                                           */
 /* NB if 'ioToPtr' is NULL then empty string is copied                    */
 void DL_STR_StrCpy ( DL_CHAR       *ioToPtr,
-				     const DL_CHAR *iFromPtr,
-				     int            iMaxChars );
+                     const DL_CHAR *iFromPtr,
+                     int            iMaxChars );
 
 /* outputs an allocated copy of the string (caller must free) */
 /* NB if 'iStr' is NULL then empty string is output           */
 /* returns: error code                                        */
 DL_ERR DL_STR_StrDup ( const DL_CHAR  *iStr,
-					   DL_CHAR       **oStr );
+                       DL_CHAR       **oStr );
 
 /* as per 'DL_STR_StrDup' but limited to 'iMaxChars' */
 /* NB if 'iStr' is NULL then empty string is output  */
 /* returns: error code                               */
 DL_ERR DL_STR_StrNDup ( const DL_CHAR  *iStr,
-					    DL_UINT32       iMaxChars,
-						DL_CHAR       **oStr );
+                        DL_UINT32       iMaxChars,
+                        DL_CHAR       **oStr );
 
 /* concatenates the two specified strings and outputs an allocated string */
 /* NB caller must free                                                    */
 /* returns: error code                                                    */
 DL_ERR DL_STR_StrCat ( const DL_CHAR  *iStr1,
-					   const DL_CHAR  *iStr2,
-					   DL_CHAR       **oStr );
+                       const DL_CHAR  *iStr2,
+                       DL_CHAR       **oStr );
 
 /******************************************************************************/
 
 /* trims any occurances of the specified character from the left of the */
 /* string and shifts the string to the left                             */
 void DL_STR_LTrim ( DL_CHAR *ioStr,
-				    DL_CHAR  iTrimCh );
+                    DL_CHAR  iTrimCh );
 
 /* trims any occurances of the specified character from the right of the */
 /* string                                                                */
 void DL_STR_RTrim ( DL_CHAR *ioStr,
-					DL_CHAR  iTrimCh );
+                    DL_CHAR  iTrimCh );
 
 /* converts all lowercase characters to uppercase */
 void DL_STR_ToUpper ( DL_CHAR *ioStr );
@@ -150,14 +150,14 @@ int DL_STR_IsNumeric ( const DL_CHAR *iStr );
 /* maxLen: indicates maximum length of the string (-1 if no check) */
 /* validChars: string of valid characters (NULL if no check)       */
 int DL_STR_Validate ( const DL_CHAR *iStr,
-					  int            iMinLen,
-				      int            iMaxLen,
-					  const DL_CHAR *iValidChars );
+                      int            iMinLen,
+                      int            iMaxLen,
+                      const DL_CHAR *iValidChars );
 
 /* returns: 1 if the string (iStr) contains any of the characters in */
 /*          'iContains', 0 otherwise                                 */
 int DL_STR_Contains ( const DL_CHAR *iStr,
-					  const DL_CHAR *iContains );
+                      const DL_CHAR *iContains );
 
 /******************************************************************************/
 
@@ -165,17 +165,17 @@ int DL_STR_Contains ( const DL_CHAR *iStr,
 /* (iEncapChar) - outputting an allocated string (oStr) - caller must free */
 /* returns: error code                                                     */
 DL_ERR DL_STR_EncapsulateStr ( const DL_CHAR  *iStr,
-							   DL_CHAR         iEncapChar,
-							   DL_CHAR       **oStr );
+                               DL_CHAR         iEncapChar,
+                               DL_CHAR       **oStr );
 
 /* gets the (escaped) content of an encapsulated string                  */
 /* outputs: oDataStr - content of encapsulated string (caller MUST free) */
 /*          oNextPtr - pointer to next character OR 'iStr' if error      */
 /* returns: error code                                                   */
 DL_ERR DL_STR_GetEncapsulatedStr ( const DL_CHAR  *iStr,
-								   DL_CHAR         iEncapChar,
-								   DL_CHAR       **oDataStr,
-								   DL_CHAR       **oNextPtr );
+                                   DL_CHAR         iEncapChar,
+                                   DL_CHAR       **oDataStr,
+                                   DL_CHAR       **oNextPtr );
 
 /******************************************************************************/
 
@@ -184,9 +184,9 @@ DL_ERR DL_STR_GetEncapsulatedStr ( const DL_CHAR  *iStr,
 /* if full (i.e. contains 'iBufferSize'-1 characters)                         */
 /* returns: pointer to next character in 'iStr'                               */
 DL_CHAR *DL_STR_ReadToBuffer ( const DL_CHAR *iStr,
-						       const DL_CHAR *iValidChars,
-						       int            iBufferSize,
-						       DL_CHAR       *oBuffer );
+                               const DL_CHAR *iValidChars,
+                               int            iBufferSize,
+                               DL_CHAR       *oBuffer );
 
 /******************************************************************************/
 

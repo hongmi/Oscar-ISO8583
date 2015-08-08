@@ -52,8 +52,8 @@
 
 struct DL_TIMER_S
 {
-	DL_UINT32 sec;
-	DL_UINT32 msec;
+    DL_UINT32 sec;
+    DL_UINT32 msec;
 };
 typedef struct DL_TIMER_S DL_TIMER;
 

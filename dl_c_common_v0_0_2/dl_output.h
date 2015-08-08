@@ -38,9 +38,9 @@
 /* NB '_iEolStr' defaults to '\n' if NULL                             */
 /* returns: n/a                                                       */
 void DL_OUTPUT_Hex ( FILE           *iOutFile,
-					 const char     *_iEolStr,
-					 const DL_UINT8 *iPtr,
-					 DL_UINT32       iNumBytes );
+                     const char     *_iEolStr,
+                     const DL_UINT8 *iPtr,
+                     DL_UINT32       iNumBytes );
 
 /******************************************************************************/
 
