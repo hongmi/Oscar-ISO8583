@@ -1,4 +1,4 @@
-CC=gcc
+CC=gcc -g
 INCLUDES=-Idl_c_iso8583_v0_0_3 -Idl_c_common_v0_0_2
 
 

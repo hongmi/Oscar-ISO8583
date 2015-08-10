@@ -1,4 +1,4 @@
-CC=gcc
+CC=gcc -g
 INCLUDES=-I../dl_c_iso8583_v0_0_3
 all:
 	${CC} -c dl_timer.c ${INCLUDES}

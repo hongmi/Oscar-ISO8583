@@ -72,6 +72,14 @@
 
 /******************************************************************************/
 //
+// CONSTANTS (padding direction types)
+//
+#define kDL_ISO8583_PADDING_LEFT        0
+#define kLD_ISO8583_PADDING_RIGHT       1
+
+
+/******************************************************************************/
+//
 // MACROS
 //
 
@@ -93,6 +101,7 @@ struct DL_ISO8583_FIELD_DEF_S
     DL_UINT8   fieldType;
     DL_UINT16  len;        /* length for fixed size / max-len for variables */
     DL_UINT8   varLen;     /* number of variable length digits - e.g. 0-4   */
+    DL_UINT8   paddingDir; /* left padding or right padding.  kDL_ISO8583_PADDING_LEFT | kDL_ISO8583_PADDING_RIGHT  */
 };
 typedef struct DL_ISO8583_FIELD_DEF_S DL_ISO8583_FIELD_DEF;
 
@@ -100,6 +109,7 @@ struct DL_ISO8583_HANDLER_S
 {
     DL_ISO8583_FIELD_DEF *fieldArr;
     DL_UINT8              fieldItems;
+    DL_UINT8              compress;        /* indicate whether the the field is compressed while pack/unpack */
 };
 typedef struct DL_ISO8583_HANDLER_S DL_ISO8583_HANDLER;
 

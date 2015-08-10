@@ -15,9 +15,10 @@ int main ( void )
     DL_UINT8           packBuf[1000];
     DL_UINT16          packedSize;
 
+
     /* get ISO-8583 1993 handler */
     DL_ISO8583_DEFS_1993_GetHandler(&isoHandler);
-
+    
     //
     // Populate/Pack message
     //

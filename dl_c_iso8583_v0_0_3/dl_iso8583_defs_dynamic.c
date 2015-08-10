@@ -22,15 +22,15 @@
 /*                                                                            */
 /******************************************************************************/
 /*                                                                            */
-/* dl_iso8583_defs_1993.c - ISO8583 1993 Definitions                          */
+/* dl_iso8583_defs_dynamic.c - ISO8583 Definitions dynamic                    */
 /*                                                                            */
 /******************************************************************************/
 
-#include "dl_iso8583_defs_1993.h"
+#include "dl_iso8583_defs_dynamic.h"
 
 /******************************************************************************/
 
-static DL_ISO8583_FIELD_DEF _iso8583_1993_fields[] = {
+static DL_ISO8583_FIELD_DEF _iso8583_dynamic_fields[] = {
     /*   0 */ {kDL_ISO8583_N  ,  4,kDL_ISO8583_FIXED  }, // Message Type Indicator
     /*   1 */ {kDL_ISO8583_BMP, 16,kDL_ISO8583_CONTVAR}, // Bitmap
     /*   2 */ {kDL_ISO8583_N  , 19,kDL_ISO8583_LLVAR  }, // Primary Account Number
@@ -164,13 +164,15 @@ static DL_ISO8583_FIELD_DEF _iso8583_1993_fields[] = {
 
 /******************************************************************************/
 
-void DL_ISO8583_DEFS_1993_GetHandler ( DL_ISO8583_HANDLER *oHandler )
+void DL_ISO8583_DEFS_DYNAMIC_GetHandler ( DL_ISO8583_HANDLER *oHandler,
+                                          DL_ISO8583_FIELD_DEF *iFieldDefArr,
+                                          DL_UINT8 iFieldDefItems,
+                                          DL_UINT8 iCompress)
 {
-    DL_ISO8583_COMMON_SetHandler(
-        _iso8583_1993_fields,
-        (DL_UINT8)(sizeof(_iso8583_1993_fields)/sizeof(DL_ISO8583_FIELD_DEF)),
-        oHandler);
-    oHandler->compress = 1;
+    DL_ISO8583_COMMON_SetHandler(iFieldDefArr,
+                                 iFieldDefItems,
+                                 oHandler);
+    oHandler->compress = iCompress;
     return;
 }
 

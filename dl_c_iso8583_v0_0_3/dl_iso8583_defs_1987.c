@@ -170,7 +170,7 @@ void DL_ISO8583_DEFS_1987_GetHandler ( DL_ISO8583_HANDLER *oHandler )
         _iso8583_1987_fields,
         (DL_UINT8)(sizeof(_iso8583_1987_fields)/sizeof(DL_ISO8583_FIELD_DEF)),
         oHandler);
-
+    oHandler->compress = 1;
     return;
 }
 
