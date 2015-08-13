@@ -36,47 +36,21 @@
 
 #define kDL_ISO8583_MAX_FIELD_IDX               128
 
-/******************************************************************************/
-//
-// CONSTANTS (Fixed/Variable size indicators)
-//
-// ** DO NOT MODIFY - used by 'dl_iso8583_field.c' **
-//
-
-#define kDL_ISO8583_FIXED               0       /* Fixed              */
-#define kDL_ISO8583_LLVAR               2       /* Variable - 0..99   */
-#define kDL_ISO8583_LLLVAR              3       /* Variable - 0..999  */
-#define kDL_ISO8583_LLLLVAR             4       /* Variable - 0..9999 */
-
 // NB special type for bitmap continuation bit
 #define kDL_ISO8583_CONTVAR             0
 
-/******************************************************************************/
+/****************************************************************************/
 //
-// CONSTANTS (Field Types)
+// CONSTANTS (field type)
 //
-// ** DO NOT MODIFY - used by 'dl_iso8583_field.c' **
-//
-
-#define kDL_ISO8583_N                   0
-#define kDL_ISO8583_NS                  1
-#define kDL_ISO8583_XN                  2
-#define kDL_ISO8583_A                   3
-#define kDL_ISO8583_AN                  4
-#define kDL_ISO8583_ANS                 5
-#define kDL_ISO8583_ANSB                6
-#define kDL_ISO8583_ANP                 7
-#define kDL_ISO8583_B                   8
-#define kDL_ISO8583_Z                   9
-#define kDL_ISO8583_BMP                 10
-
-/******************************************************************************/
-//
-// CONSTANTS (padding direction types)
-//
-#define kDL_ISO8583_PADDING_LEFT        0
-#define kLD_ISO8583_PADDING_RIGHT       1
-
+#define kDL_ISO8583_ASCII            0
+#define kDL_ISO8583_EBCDIC           1
+#define kDL_ISO8583_BCD_LEFT         2
+#define kDL_ISO8583_BCD_RIGHT        3
+#define kDL_ISO8583_NIBBLE_LEFT      4
+#define kDL_ISO8583_NIBBLE_RIGHT     5
+#define kDL_ISO8583_BYTE             6
+#define kDL_ISO8583_BMP              7
 
 /******************************************************************************/
 //
@@ -84,32 +58,39 @@
 //
 
 // Indicates whether the field type is BITMAP
-#define DL_ISO8583_IS_BITMAP(fieldType)         \
-    (kDL_ISO8583_BMP==(fieldType))
+#define DL_ISO8583_IS_BITMAP(fieldType)  (kDL_ISO8583_BMP==(fieldType))
 
 // Gets the field definition for the specified handler
-#define DL_ISO8583_GetFieldDef(fieldIdx,handler)                        \
-    ((DL_ISO8583_FIELD_DEF*)(((handler)->fieldArr) + (fieldIdx)))
+#define DL_ISO8583_GetFieldDef(fieldIdx,handler) ((DL_ISO8583_FIELD_DEF*)(((handler)->fieldArr)+(fieldIdx)))
+
+// Indicates whehter the field type is valid
+#define DL_ISO8583_INVALID_FIELD_TYPE(t) (((t) >= kDL_ISO8583_ASCII) && ((t) <= kDL_ISO8583_BMP))
+
+// Gets the field unpack space in bytes
+#define LD_ISO8583_FIELD_LEN_IN_BYTE(fieldType, size)           \
+    (((fieldType) == xDL_ISO8583_BCD_LEFT      ||    \
+      (fieldType) == xDL_ISO8583_BCD_RIGHT     ||    \
+      (fieldType) == xDL_ISO8583_NIBBLE_LEFT   ||    \
+      (fieldType) == xDL_ISO8583_NIBBLE_RIGHT) ?     \
+     ((size) * 2) : (size))
+
 
 /******************************************************************************/
 //
 // TYPES
 //
 
-struct DL_ISO8583_FIELD_DEF_S
-{
-    DL_UINT8   fieldType;
-    DL_UINT16  len;        /* length for fixed size / max-len for variables */
-    DL_UINT8   varLen;     /* number of variable length digits - e.g. 0-4   */
-    DL_UINT8   paddingDir; /* left padding or right padding.  kDL_ISO8583_PADDING_LEFT | kDL_ISO8583_PADDING_RIGHT  */
+struct DL_ISO8583_FIELD_DEF_S {
+    DL_UINT8   varLenType;     /* the varlen's type */
+    DL_UINT8   varLenLen;      /* number of varlen bytes in byte */
+    DL_UINT32  len;            /* length for fixed size / max-len for variables */
+    DL_UINT8   fieldType;      /* fied type, determine the unit of field's len counting.*/
 };
 typedef struct DL_ISO8583_FIELD_DEF_S DL_ISO8583_FIELD_DEF;
 
-struct DL_ISO8583_HANDLER_S
-{
+struct DL_ISO8583_HANDLER_S {
     DL_ISO8583_FIELD_DEF *fieldArr;
     DL_UINT8              fieldItems;
-    DL_UINT8              compress;        /* indicate whether the the field is compressed while pack/unpack */
 };
 typedef struct DL_ISO8583_HANDLER_S DL_ISO8583_HANDLER;
 
@@ -120,8 +101,7 @@ struct DL_ISO8583_MSG_FIELD_S
 };
 typedef struct DL_ISO8583_MSG_FIELD_S DL_ISO8583_MSG_FIELD;
 
-struct DL_ISO8583_MSG_S
-{
+struct DL_ISO8583_MSG_S {
     /* static memory details */
     DL_UINT8 *sPtrNext; /* next static point - NULL if dynamic mode  */
     DL_UINT8 *sPtrEnd;  /* end of the static buffer (if static mode) */

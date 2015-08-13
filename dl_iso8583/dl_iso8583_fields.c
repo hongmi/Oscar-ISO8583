@@ -33,39 +33,6 @@
 // FIELD HANDLER PROTOTYPES
 //
 
-DL_ERR _pack_iso_ASCHEX ( DL_UINT16                    iField,
-                          const DL_ISO8583_MSG        *iMsg,
-                          const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                          DL_UINT8                   **ioPtr );
-
-// unpacks ISO Numeric (bcd format)
-// NB if iSize is odd then we have a padding char on left
-//    (but don't include when unpacking)
-DL_ERR _unpack_iso_ASCHEX ( DL_UINT16                    iField,
-                            DL_ISO8583_MSG              *ioMsg,
-                            const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                            DL_UINT8                   **ioPtr );
-
-DL_ERR _pack_iso_ASCII ( DL_UINT16                    iField,
-                         const DL_ISO8583_MSG        *iMsg,
-                         const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                         DL_UINT8                   **ioPtr );
-
-DL_ERR _unpack_iso_ASCII ( DL_UINT16                    iField,
-                           DL_ISO8583_MSG              *ioMsg,
-                           const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                           DL_UINT8                   **ioPtr );
-
-DL_ERR _pack_iso_BINARY ( DL_UINT16                    iField,
-                          const DL_ISO8583_MSG        *iMsg,
-                          const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                          DL_UINT8                   **ioPtr );
-
-DL_ERR _unpack_iso_BINARY ( DL_UINT16                    iField,
-                            DL_ISO8583_MSG              *ioMsg,
-                            const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                            DL_UINT8                   **ioPtr );
-
 DL_ERR _pack_iso_BITMAP ( DL_UINT16                    iField,
                           const DL_ISO8583_MSG        *iMsg,
                           const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
@@ -76,26 +43,23 @@ DL_ERR _unpack_iso_BITMAP ( DL_UINT16                    iField,
                             const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
                             DL_UINT8                   **ioPtr );
 
-//for uncompress fields
-DL_ERR _pack_iso_ASCII_ex ( DL_UINT16                    iField,
-                            const DL_ISO8583_MSG        *iMsg,
-                            const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                            DL_UINT8                   **ioPtr );
+DL_ERR _pack( DL_UINT16                    iField,
+              const DL_ISO8583_MSG        *iMsg,
+              const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
+              DL_UINT8                   **ioPtr );
 
-DL_ERR _unpack_iso_ASCII_ex ( DL_UINT16                    iField,
-                              DL_ISO8583_MSG              *ioMsg,
-                              const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                              DL_UINT8                   **ioPtr );
+DL_ERR _unpack( DL_UINT16                    iField,
+                DL_ISO8583_MSG              *ioMsg,
+                const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
+                DL_UINT8                   **ioPtr );
 
-DL_ERR _pack_iso_BINARY_ex ( DL_UINT16                    iField,
-                             const DL_ISO8583_MSG        *iMsg,
-                             const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                             DL_UINT8                   **ioPtr );
 
-DL_ERR _unpack_iso_BINARY_ex ( DL_UINT16                    iField,
-                               DL_ISO8583_MSG              *ioMsg,
-                               const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                               DL_UINT8                   **ioPtr );
+DL_ERR _packLenAscii();
+DL_ERR _packAscii();
+DL_ERR _unpackLenAscii();
+DL_ERR _unpackAscii();
+
+
 
 /******************************************************************************/
 //
@@ -131,8 +95,10 @@ static DL_ERR VarLen_Get_ex ( const DL_UINT8 **ioPtr,
 //
 
 struct DL_ISO8583_TYPE_S {
-    DL_ERR    (*unpackFunc)(DL_UINT16,DL_ISO8583_MSG*,const DL_ISO8583_FIELD_DEF*,DL_UINT8**);
-    DL_ERR    (*packFunc  )(DL_UINT16,const DL_ISO8583_MSG*,const DL_ISO8583_FIELD_DEF*,DL_UINT8**);
+    DL_ERR    (*_packLenFunc)(DL_UINT32, DL_UINT8, DL_UINT8**);
+    DL_ERR    (*_packFunc)(DL_UINT8*, DL_UINT32, DL_UINT32, DL_UINT8**);
+    DL_ERR    (*_unpackLenFunc)(DL_UINT8**, DL_UINT8, DL_UINT32*);
+    DL_ERR    (*_unpackFunc)(DL_UINT8**, DL_UINT32, DL_UINT8**);
 };
 typedef struct DL_ISO8583_TYPE_S DL_ISO8583_TYPE;
 
@@ -141,18 +107,18 @@ typedef struct DL_ISO8583_TYPE_S DL_ISO8583_TYPE;
 // VARIABLES
 //
 // the second column store the uncompressed field's call
+
+#define MAKE_FIELD_TYPE_FUNC(T) {_packLen##T, _pack##T, _unpackLen##T, _unpack##T}
+
 static DL_ISO8583_TYPE fieldTypeArr[] = {
-    /* ISO_N    */ {_unpack_iso_ASCHEX,_pack_iso_ASCHEX}, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex }, 
-    /* ISO_NS   */ {_unpack_iso_BINARY,_pack_iso_BINARY}, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex },
-    /* ISO_XN   */ {_unpack_iso_ASCHEX,_pack_iso_ASCHEX}, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex },
-    /* ISO_A    */ {_unpack_iso_ASCII ,_pack_iso_ASCII }, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex }, 
-    /* ISO_AN   */ {_unpack_iso_ASCII ,_pack_iso_ASCII }, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex }, 
-    /* ISO_ANS  */ {_unpack_iso_ASCII ,_pack_iso_ASCII }, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex },
-    /* ISO_ANSB */ {_unpack_iso_ASCII ,_pack_iso_ASCII }, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex },
-    /* ISO_ANP  */ {_unpack_iso_ASCII ,_pack_iso_ASCII }, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex },
-    /* ISO_B    */ {_unpack_iso_BINARY,_pack_iso_BINARY}, {_unpack_iso_BINARY_ex,_pack_iso_BINARY_ex},
-    /* ISO_Z    */ {_unpack_iso_ASCHEX,_pack_iso_ASCHEX}, {_unpack_iso_ASCII_ex ,_pack_iso_ASCII_ex },
-    /* ISO_BMAP */ {_unpack_iso_BITMAP,_pack_iso_BITMAP}, {_unpack_iso_BITMAP   ,_pack_iso_BITMAP   }
+    /* ASCII        */ MAKE_FIELD_TYPE_FUNC(Ascii),
+    /* EBCDIC       */ MAKE_FIELD_TYPE_FUNC(Ebcdic),
+    /* BCD_LEFT     */ MAKE_FIELD_TYPE_FUNC(BcdLeft),
+    /* BCD_RIGHT    */ MAKE_FIELD_TYPE_FUNC(BcdRight),
+    /* NIBBLE_LEFT  */ MAKE_FIELD_TYPE_FUNC(NibbleLeft),
+    /* NIBBLE_RIGHT */ MAKE_FIELD_TYPE_FUNC(NibbleRight),
+    /* BYTE         */ MAKE_FIELD_TYPE_FUNC(Byte),
+    /* BMP          */ MAKE_FIELD_TYPE_FUNC(Bmp)
 };
 
 /******************************************************************************/
@@ -161,8 +127,7 @@ static DL_ISO8583_TYPE fieldTypeArr[] = {
 //
 
 // gets the field type details
-#define GetFieldType(fieldType, compress)                       \
-    (&fieldTypeArr[(fieldType) * 2 + ((compress) ? 0 : 1)])
+#define GetFieldType(fieldType)  (&fieldTypeArr[(fieldType))
 
 /******************************************************************************/
 
@@ -172,11 +137,23 @@ DL_ERR _DL_ISO8583_FIELD_Pack ( DL_UINT16                  iField,
                                 DL_UINT8                 **ioPtr )
 {
     DL_ERR                err          = kDL_ERR_NONE;
-    DL_ISO8583_FIELD_DEF *fieldDefPtr  = DL_ISO8583_GetFieldDef(iField,iHandler);
-    DL_ISO8583_TYPE      *fieldTypePtr = GetFieldType(fieldDefPtr->fieldType, iHandler->compress);
+    DL_ISO8583_FIELD_DEF *fieldDefPtr  = DL_ISO8583_GetFieldDef(iField, iHandler);
+    DL_UINT8             *tmpPtr        = *ioPtr;
+    DL_ISO8583_MSG_FIELD *fieldPtr      = ((DL_ISO8583_MSG*)iMsg)->field + iField;
+    DL_UINT32             inLen         = fieldPtr->len;     //len of the field in field unit, not include padding
+    DL_UINT8             *dataPtr       = fieldPtr->ptr;
+    DL_UINT32             outLen        = iFieldDefPtr->len; //len of the packed field in field unit, include padding
+    
+    /* variable length handling */
+    err = VarLen_Put(fieldDefPtr->varLenLen, fieldDefPtr->varLenType, inLen, outLen, &tmpPtr);
 
-    err = fieldTypePtr->packFunc(iField,iMsg,fieldDefPtr,ioPtr);
-
+    //fill the field content
+    if (!err) {
+        err = GetFieldType(fieldDefPtr->fieldType)->_packFunc(dataPtr, inLen, outLen, &tmpPtr);
+    }
+    
+    *ioPtr = tmpPtr;
+    
     return err;
 }
 
@@ -188,297 +165,31 @@ DL_ERR _DL_ISO8583_FIELD_Unpack ( DL_UINT16                  iField,
                                   DL_UINT8                 **ioPtr )
 {
     DL_ERR                err          = kDL_ERR_NONE;
-    DL_ISO8583_FIELD_DEF *fieldDefPtr  = DL_ISO8583_GetFieldDef(iField,iHandler);
-    DL_ISO8583_TYPE      *fieldTypePtr = GetFieldType(fieldDefPtr->fieldType, iHandler->compress);
+    DL_ISO8583_FIELD_DEF *fieldDefPtr  = DL_ISO8583_GetFieldDef(iField, iHandler);
 
-    err = fieldTypePtr->unpackFunc(iField,ioMsg,fieldDefPtr,ioPtr);
-
-    return err;
-}
-
-/******************************************************************************/
-
-DL_ERR _pack_iso_ASCHEX ( DL_UINT16                    iField,
-                          const DL_ISO8583_MSG        *iMsg,
-                          const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                          DL_UINT8                   **ioPtr )
-{
-    DL_ERR                err           = kDL_ERR_NONE;
-    DL_UINT8             *tmpPtr        = *ioPtr;
-    DL_ISO8583_MSG_FIELD *fieldPtr      = ((DL_ISO8583_MSG*)iMsg)->field + iField;
-    DL_UINT32             actLen        = fieldPtr->len;
-    DL_UINT8             *dataPtr       = fieldPtr->ptr;
-    DL_UINT32             reqLen        = iFieldDefPtr->len;
-    DL_UINT32             wholeActBytes = 0;
-    DL_UINT32             wholeReqBytes = 0;
-    DL_UINT32             i;
-
-    /* variable length handling */
-    err = VarLen_Put(iFieldDefPtr->varLen,actLen,&reqLen,&tmpPtr);
-
-    if ( !err ) {
-        if ( actLen > reqLen ) { /* too long */
-            err = kDL_ERR_OTHER;
-        } else {
-            /* determine numbers of bytes for required / actual lengths      */
-            /* NB 'required bytes' are rounded up, 'actual' are rounded down */
-            wholeActBytes = actLen / 2;
-            wholeReqBytes = (reqLen + 1) / 2;
-                        
-            if (iFieldDefPtr->paddingDir == kDL_ISO8583_PADDING_LEFT) {
-                /* output left padding (00h) bytes - where required */
-                /* NB less one if the actual length has an odd number of digits */
-                i = wholeReqBytes - wholeActBytes - actLen % 2;
-                DL_MEM_memset(tmpPtr,0,i);
-                tmpPtr += i;
-
-                /* handle partial digit - if required */
-                if ( actLen % 2 ) {
-                    *tmpPtr++ = (DL_UINT8)DL_ASCHEX_2_NIBBLE(dataPtr[0]);
-                    dataPtr++;
-                }
-
-                /* handle complete digit pairs */
-                for ( i=0 ; i<wholeActBytes ; i++,dataPtr+=2 ) {
-                    *tmpPtr++ = (DL_UINT8)((DL_ASCHEX_2_NIBBLE(dataPtr[0])<<4) | DL_ASCHEX_2_NIBBLE(dataPtr[1]));
-                }
-            } else { //padding right
-                /* handle complete digit pairs */
-                for ( i = 0 ; i < wholeActBytes ; i++,dataPtr += 2 ) {
-                    *tmpPtr++ = (DL_UINT8)((DL_ASCHEX_2_NIBBLE(dataPtr[0])<<4) | DL_ASCHEX_2_NIBBLE(dataPtr[1]));
-                }
-
-                /* handle partial digit - if required */
-                if ( actLen % 2 ) {
-                    *tmpPtr++ = (DL_UINT8)(DL_ASCHEX_2_NIBBLE(dataPtr[0])<<4);
-                    dataPtr++;
-                }
-                
-                i = wholeReqBytes - wholeActBytes - actLen % 2;
-                
-                /* padding right */
-                DL_MEM_memset(tmpPtr, 0, i);
-                tmpPtr += i;
-            }
-        }
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
-
-// unpacks ISO Numeric (bcd format)
-// NB if iSize is odd then we have a padding char on left
-//    (but don't include when unpacking)
-// NB doesn't remove any leading padding (0 nibbles)
-DL_ERR _unpack_iso_ASCHEX ( DL_UINT16                    iField,
-                            DL_ISO8583_MSG              *ioMsg,
-                            const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                            DL_UINT8                   **ioPtr )
-{
-    DL_ERR     err        = kDL_ERR_NONE;
     DL_UINT8  *tmpPtr     = *ioPtr;
-    DL_UINT16  size       = 0;
+    DL_UINT32  size       = 0;
+    DL_UINT32  sizeAlloc  = 0;
     DL_UINT8  *tmpDataPtr = NULL;
-
+    
     /* variable length handling */
-    err = VarLen_Get(&tmpPtr,iFieldDefPtr->varLen,iFieldDefPtr->len,&size);
+    err = VarLen_Get(&tmpPtr, fieldDefPtr->varLenLen, fieldDefPtr->varLenType, fieldDefPtr->len, &size);
 
     /* allocate field */
-    if ( !err )
-        err = _DL_ISO8583_MSG_AllocField(iField,size,ioMsg,&tmpDataPtr);
+    if ( !err ) {
+        sizeAlloc = DL_ISO8583_FIELD_LEN_IN_BYTE(fieldDefPtr->fieldType, size);
+        err = _DL_ISO8583_MSG_AllocField(iField, sizeAlloc, ioMsg, &tmpDataPtr);
+    }
 
     if ( !err ) {
-        DL_UINT8 ch;
-
-        if (iFieldDefPtr->paddingDir == kDL_ISO8583_PADDING_LEFT) {
-            /* if size is 'odd' then ignore the leading nibble, as this is a pad character */
-            if ( size % 2 ) {
-                ch = *tmpPtr & 0x0f;
-                *tmpDataPtr++ = DL_NIBBLE_2_ASCHEX(ch);
-                tmpPtr++;
-                size -= 1;
-            }
-            while ( size > 1 ) {
-                ch = (*tmpPtr >> 4) & 0xf;
-                *tmpDataPtr++ = DL_NIBBLE_2_ASCHEX(ch);
-                ch = *tmpPtr & 0xf;
-                *tmpDataPtr++ = DL_NIBBLE_2_ASCHEX(ch);
-                tmpPtr++;
-                size -= 2;
-            }
-        } else {
-            while ( size > 1 ) {
-                ch = (*tmpPtr >> 4) & 0xf;
-                *tmpDataPtr++ = DL_NIBBLE_2_ASCHEX(ch);
-                ch = *tmpPtr & 0xf;
-                *tmpDataPtr++ = DL_NIBBLE_2_ASCHEX(ch);
-                tmpPtr++;
-                size -= 2;
-            }
-            if (size % 2) { // size is 'odd'
-                ch = (*tmpPtr >> 4) & 0x0f;
-                *tmpDataPtr++ = DL_NIBBLE_2_ASCHEX(ch);
-                tmpPtr++;
-            }
-        }
-                
-        *tmpDataPtr = kDL_ASCII_NULL; /* null terminate */
+        err = GetFieldType(fieldDefPtr->fieldType)->_unpackFunc(&tmpPtr, size, &tmpDataPtr);
+        *tmpDataPtr = kDL_ASCII_NULL; // null terminate 
     }
 
     *ioPtr = tmpPtr;
 
-    return err;
+    return err;    
 }
-
-/******************************************************************************/
-
-DL_ERR _pack_iso_ASCII ( DL_UINT16                    iField,
-                         const DL_ISO8583_MSG        *iMsg,
-                         const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                         DL_UINT8                   **ioPtr )
-{
-    DL_ERR                err      = kDL_ERR_NONE;
-    DL_UINT8             *tmpPtr   = *ioPtr;
-    DL_ISO8583_MSG_FIELD *fieldPtr = ((DL_ISO8583_MSG*)iMsg)->field + iField;
-    DL_UINT32             actLen   = fieldPtr->len;
-    DL_UINT8             *dataPtr  = fieldPtr->ptr;
-    DL_UINT32             reqLen   = iFieldDefPtr->len;
-
-    /* variable length handling */
-    err = VarLen_Put(iFieldDefPtr->varLen,actLen,&reqLen,&tmpPtr);
-
-    if ( !err ) {
-        if ( actLen > reqLen ) { /* too long */
-            err = kDL_ERR_OTHER;
-        }
-        else if ( actLen == reqLen ) { /* exact size */
-            /* copy up to 'required' amount */
-            DL_MEM_memcpy(tmpPtr,dataPtr,reqLen);
-            tmpPtr += reqLen;
-        } else { /* shorter - so need to right pad (space) */
-            /* copy what data we have (actual length) */
-            DL_MEM_memcpy(tmpPtr, dataPtr, actLen);
-            /* right pad as required */
-            DL_MEM_memset(tmpPtr+actLen, (int)kDL_ASCII_SP, reqLen - actLen);
-            tmpPtr += reqLen;
-        }
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
-
-// NB doesn't remove any trailing padding (spaces)
-DL_ERR _unpack_iso_ASCII ( DL_UINT16                    iField,
-                           DL_ISO8583_MSG              *ioMsg,
-                           const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                           DL_UINT8                   **ioPtr )
-{
-    DL_ERR     err        = kDL_ERR_NONE;
-    DL_UINT8  *tmpPtr     = *ioPtr;
-    DL_UINT16  size       = 0;
-    DL_UINT8  *tmpDataPtr = NULL;
-
-    /* variable length handling */
-    err = VarLen_Get(&tmpPtr,iFieldDefPtr->varLen,iFieldDefPtr->len,&size);
-
-    /* allocate field */
-    if ( !err )
-        err = _DL_ISO8583_MSG_AllocField(iField,size,ioMsg,&tmpDataPtr);
-
-    if ( !err ) {
-        DL_MEM_memcpy(tmpDataPtr,tmpPtr,size); 
-        tmpPtr     += size;
-        tmpDataPtr += size;
-
-        *tmpDataPtr = kDL_ASCII_NULL; /* null terminate */
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
-
-DL_ERR _pack_iso_BINARY ( DL_UINT16                    iField,
-                          const DL_ISO8583_MSG        *iMsg,
-                          const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                          DL_UINT8                   **ioPtr )
-{
-    DL_ERR                err      = kDL_ERR_NONE;
-    DL_UINT8             *tmpPtr   = *ioPtr;
-    DL_ISO8583_MSG_FIELD *fieldPtr = ((DL_ISO8583_MSG*)iMsg)->field + iField;
-    DL_UINT32             actLen   = fieldPtr->len;
-    DL_UINT8             *dataPtr  = fieldPtr->ptr;
-    DL_UINT32             reqLen   = iFieldDefPtr->len;
-
-    /* variable length handling */
-    err = VarLen_Put(iFieldDefPtr->varLen,actLen,&reqLen,&tmpPtr);
-
-    if ( !err ) {
-        if ( actLen > reqLen ) { /* too long */
-            err = kDL_ERR_OTHER;
-        } else if ( actLen == reqLen ) { /* exact size */
-            /* copy up to 'required' amount */
-            DL_MEM_memcpy(tmpPtr,dataPtr,reqLen);
-            tmpPtr += reqLen;
-        } else { /* shorter - so need to right pad (space) */
-            /* copy what data we have (actual length) */
-            DL_MEM_memcpy(tmpPtr,dataPtr,actLen);
-            /* right pad as required */
-            DL_MEM_memset(tmpPtr+actLen,(int)0,reqLen-actLen);
-            tmpPtr += reqLen;
-        }
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
-
-// NB doesn't remove any trailing padding (0's)
-DL_ERR _unpack_iso_BINARY ( DL_UINT16                    iField,
-                            DL_ISO8583_MSG              *ioMsg,
-                            const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                            DL_UINT8                   **ioPtr )
-{
-    DL_ERR     err        = kDL_ERR_NONE;
-    DL_UINT8  *tmpPtr     = *ioPtr;
-    DL_UINT16  size       = 0;
-    DL_UINT8  *tmpDataPtr = NULL;
-
-    /* variable length handling */
-    err = VarLen_Get(&tmpPtr,iFieldDefPtr->varLen,iFieldDefPtr->len,&size);
-
-    /* allocate field */
-    if ( !err )
-        err = _DL_ISO8583_MSG_AllocField(iField,size,ioMsg,&tmpDataPtr);
-
-    if ( !err )
-    {
-        DL_MEM_memcpy(tmpDataPtr,tmpPtr,size); 
-        tmpPtr     += size;
-        tmpDataPtr += size;
-
-        *tmpDataPtr = kDL_ASCII_NULL; /* null terminate */
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
 
 DL_ERR _pack_iso_BITMAP ( DL_UINT16                    iField,
                           const DL_ISO8583_MSG        *iMsg,
@@ -620,204 +331,28 @@ DL_ERR _unpack_iso_BITMAP ( DL_UINT16                    iField,
 }
 
 
-/**************************for uncompressed field******************************/
-/******************************************************************************/
-DL_ERR _pack_iso_ASCII_ex ( DL_UINT16                    iField,
-                            const DL_ISO8583_MSG        *iMsg,
-                            const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                            DL_UINT8                   **ioPtr )
-{
-    DL_ERR                err      = kDL_ERR_NONE;
-    DL_UINT8             *tmpPtr   = *ioPtr;
-    DL_ISO8583_MSG_FIELD *fieldPtr = ((DL_ISO8583_MSG*)iMsg)->field + iField;
-    DL_UINT32             actLen   = fieldPtr->len;
-    DL_UINT8             *dataPtr  = fieldPtr->ptr;
-    DL_UINT32             reqLen   = iFieldDefPtr->len;
-
-    /* variable length handling */
-    err = VarLen_Put_ex(iFieldDefPtr->varLen,actLen,&reqLen,&tmpPtr);
-
-    if ( !err )
-    {
-        if ( actLen > reqLen ) /* too long */
-        {
-            err = kDL_ERR_OTHER;
-        }
-        else if ( actLen == reqLen ) /* exact size */
-        {
-            /* copy up to 'required' amount */
-            DL_MEM_memcpy(tmpPtr,dataPtr,reqLen);
-            tmpPtr += reqLen;
-        }
-        else /* shorter - so need to right pad (space) */
-        {
-            /* copy what data we have (actual length) */
-            DL_MEM_memcpy(tmpPtr,dataPtr,actLen);
-            /* right pad as required */
-            DL_MEM_memset(tmpPtr+actLen,(int)kDL_ASCII_SP,reqLen-actLen);
-            tmpPtr += reqLen;
-        }
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
-
-// NB doesn't remove any trailing padding (spaces)
-DL_ERR _unpack_iso_ASCII_ex ( DL_UINT16                    iField,
-                              DL_ISO8583_MSG              *ioMsg,
-                              const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                              DL_UINT8                   **ioPtr )
-{
-    DL_ERR     err        = kDL_ERR_NONE;
-    DL_UINT8  *tmpPtr     = *ioPtr;
-    DL_UINT16  size       = 0;
-    DL_UINT8  *tmpDataPtr = NULL;
-
-    /* variable length handling */
-    err = VarLen_Get_ex(&tmpPtr,iFieldDefPtr->varLen,iFieldDefPtr->len,&size);
-
-    /* allocate field */
-    if ( !err )
-        err = _DL_ISO8583_MSG_AllocField(iField,size,ioMsg,&tmpDataPtr);
-
-    if ( !err )
-    {
-        DL_MEM_memcpy(tmpDataPtr,tmpPtr,size); 
-        tmpPtr     += size;
-        tmpDataPtr += size;
-
-        *tmpDataPtr = kDL_ASCII_NULL; /* null terminate */
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
-
-DL_ERR _pack_iso_BINARY_ex ( DL_UINT16                    iField,
-                             const DL_ISO8583_MSG        *iMsg,
-                             const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                             DL_UINT8                   **ioPtr )
-{
-    DL_ERR                err      = kDL_ERR_NONE;
-    DL_UINT8             *tmpPtr   = *ioPtr;
-    DL_ISO8583_MSG_FIELD *fieldPtr = ((DL_ISO8583_MSG*)iMsg)->field + iField;
-    DL_UINT32             actLen   = fieldPtr->len;
-    DL_UINT8             *dataPtr  = fieldPtr->ptr;
-    DL_UINT32             reqLen   = iFieldDefPtr->len;
-
-    /* variable length handling */
-    err = VarLen_Put_ex(iFieldDefPtr->varLen,actLen,&reqLen,&tmpPtr);
-
-    if ( !err )
-    {
-        if ( actLen > reqLen ) /* too long */
-        {
-            err = kDL_ERR_OTHER;
-        }
-        else if ( actLen == reqLen ) /* exact size */
-        {
-            /* copy up to 'required' amount */
-            DL_MEM_memcpy(tmpPtr,dataPtr,reqLen);
-            tmpPtr += reqLen;
-        }
-        else /* shorter - so need to right pad (space) */
-        {
-            /* copy what data we have (actual length) */
-            DL_MEM_memcpy(tmpPtr,dataPtr,actLen);
-            /* right pad as required */
-            DL_MEM_memset(tmpPtr+actLen,(int)0,reqLen-actLen);
-            tmpPtr += reqLen;
-        }
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
-
-// NB doesn't remove any trailing padding (0's)
-DL_ERR _unpack_iso_BINARY_ex ( DL_UINT16                    iField,
-                               DL_ISO8583_MSG              *ioMsg,
-                               const DL_ISO8583_FIELD_DEF  *iFieldDefPtr,
-                               DL_UINT8                   **ioPtr )
-{
-    DL_ERR     err        = kDL_ERR_NONE;
-    DL_UINT8  *tmpPtr     = *ioPtr;
-    DL_UINT16  size       = 0;
-    DL_UINT8  *tmpDataPtr = NULL;
-
-    /* variable length handling */
-    err = VarLen_Get_ex(&tmpPtr,iFieldDefPtr->varLen,iFieldDefPtr->len,&size);
-
-    /* allocate field */
-    if ( !err )
-        err = _DL_ISO8583_MSG_AllocField(iField,size,ioMsg,&tmpDataPtr);
-
-    if ( !err )
-    {
-        DL_MEM_memcpy(tmpDataPtr,tmpPtr,size); 
-        tmpPtr     += size;
-        tmpDataPtr += size;
-
-        *tmpDataPtr = kDL_ASCII_NULL; /* null terminate */
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
 /******************************************************************************/
 
 // returns the bcd encoded value - based on decValue (0..99)
-#define output_bcd_byte(decValue)                       \
-    ((DL_UINT8)((((decValue)/10)<<4)|((decValue)%10)))
+#define output_bcd_byte(decValue) ((DL_UINT8)((((decValue)/10)<<4)|((decValue)%10)))
 
 // outputs the variable length element
 // iVarLenType - e.g. kDL_ISO8583_LLVAR
-static DL_ERR VarLen_Put ( DL_UINT8    iVarLenType,
-                           DL_UINT32   iActLen,
-                           DL_UINT32  *ioReqLen,
-                           DL_UINT8  **ioPtr )
+static DL_ERR VarLen_Put ( DL_UINT8                     varLenLen,
+                           DL_UINT8                     varLenType,
+                           DL_UINT32                    inLen,
+                           DL_UINT32                   *outLen,
+                           DL_UINT8                   **ioPtr )
 {
-    DL_ERR    err    = kDL_ERR_NONE;
-    DL_UINT8 *tmpPtr = *ioPtr;
+    DL_ERR       err    = kDL_ERR_NONE;
+    DL_UINT8    *tmpPtr = *ioPtr;
 
-    switch ( iVarLenType )
-    {
-        case kDL_ISO8583_FIXED:
-            /* do nothing */
-            break;
-        case kDL_ISO8583_LLVAR:
-            iActLen   %= 100;
-            *ioReqLen  = iActLen;
-            *tmpPtr++    = output_bcd_byte(iActLen);
-            break;
-        case kDL_ISO8583_LLLVAR:
-            iActLen   %= 1000;
-            *ioReqLen  = iActLen;
-            *tmpPtr++    = output_bcd_byte(iActLen/100);
-            *tmpPtr++    = output_bcd_byte(iActLen%100);
-            break;
-        case kDL_ISO8583_LLLLVAR:
-            iActLen   %= 10000;
-            *ioReqLen  = iActLen;
-            *tmpPtr++    = output_bcd_byte(iActLen/100);
-            *tmpPtr++    = output_bcd_byte(iActLen%100);
-            break;
-        default:
-            /* [ERROR] unsupported length type */
-            err = kDL_ERR_OTHER;
-    } /* end-switch */
+    // fixed len, we do nothing
+    if (varLenLen <= 0) {
+        return err;
+    }
+
+    err = GetFieldType(fieldDefPtr->varLenType)->_packLenFunc(inLen, varLenLen, &tmpPtr);
 
     *ioPtr = tmpPtr;
 
@@ -828,9 +363,10 @@ static DL_ERR VarLen_Put ( DL_UINT8    iVarLenType,
 
 // determines variable length element
 static DL_ERR VarLen_Get ( const DL_UINT8 **ioPtr,
-                           DL_UINT8         iVarLenDigits,
-                           DL_UINT16        iMaxValue,
-                           DL_UINT16       *oLen )
+                           DL_UINT8         varLenLen,
+                           DL_UINT8         varLenType,
+                           DL_UINT32        iMaxValue,
+                           DL_UINT32       *oLen )
 {
     DL_ERR    err    = kDL_ERR_NONE;
     DL_UINT8 *tmpPtr = (DL_UINT8*)*ioPtr;
@@ -838,22 +374,14 @@ static DL_ERR VarLen_Get ( const DL_UINT8 **ioPtr,
     /* init outputs */
     *oLen = iMaxValue;
 
-    if ( kDL_ISO8583_FIXED != iVarLenDigits ) {
-        *oLen = 0;
-
-        if ( iVarLenDigits % 2 )
-            iVarLenDigits++;
-
-        while ( iVarLenDigits > 0 ) {
-            *oLen = (*oLen * 100) +
-                    ((((int)(*tmpPtr) >> 4) & 0xf) * 10) +
-                    ((int)(*tmpPtr) & 0xf);
-            iVarLenDigits -= 2;
-            tmpPtr++;
-        } /* end-while */
-
+    if (varLenLen <= 0) {
+        return err;
+    }
+    
+    if ( !err ) {
+        err = GetFieldType(fieldDefPtr->varLenType)->_unpackLenFunc(&tmpPtr, varLenLen, oLen);
         /* limit if exceeds max */
-        *oLen = MIN(iMaxValue,*oLen);
+        *oLen = MIN(iMaxValue, *oLen);
     }
 
     *ioPtr = tmpPtr;
@@ -861,84 +389,3 @@ static DL_ERR VarLen_Get ( const DL_UINT8 **ioPtr,
     return err;
 }
 
-/************************for uncompressed field*******************************/
-/*****************************************************************************/
-// outputs the variable length element, eg. 25 -> "025"
-// iVarLenType - e.g. kDL_ISO8583_LLVAR
-static DL_ERR VarLen_Put_ex ( DL_UINT8    iVarLenType,
-                              DL_UINT32   iActLen,
-                              DL_UINT32  *ioReqLen,
-                              DL_UINT8  **ioPtr )
-{
-    DL_ERR    err    = kDL_ERR_NONE;
-    DL_UINT8 *tmpPtr = *ioPtr;
-
-    switch ( iVarLenType )
-    {
-        case kDL_ISO8583_FIXED:
-            /* do nothing */
-            break;
-        case kDL_ISO8583_LLVAR:
-            iActLen   %= 100;
-            *ioReqLen  = iActLen;
-            *tmpPtr++    = iActLen / 10 + '0';
-            *tmpPtr++    = iActLen % 10 + '0';
-            break;
-        case kDL_ISO8583_LLLVAR:
-            iActLen   %= 1000;
-            *ioReqLen  = iActLen;
-            *tmpPtr++    = iActLen / 100 + '0';
-            *tmpPtr++    = (iActLen % 100) / 10 + '0';
-            *tmpPtr++    = iActLen % 10 + '0';
-            break;
-        case kDL_ISO8583_LLLLVAR:
-            iActLen   %= 10000;
-            *ioReqLen  = iActLen;
-            *tmpPtr++    = iActLen / 1000 + '0';
-            *tmpPtr++    = (iActLen % 1000) / 100 + '0';
-            *tmpPtr++    = (iActLen % 100) / 10 + '0';
-            *tmpPtr++    = iActLen % 10  + '0';
-            break;
-        default:
-            /* [ERROR] unsupported length type */
-            err = kDL_ERR_OTHER;
-    } /* end-switch */
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
-
-// determines variable length element. eg   "025" -> 25
-static DL_ERR VarLen_Get_ex ( const DL_UINT8 **ioPtr,
-                              DL_UINT8         iVarLenDigits,
-                              DL_UINT16        iMaxValue,
-                              DL_UINT16       *oLen )
-{
-    DL_ERR    err    = kDL_ERR_NONE;
-    DL_UINT8 *tmpPtr = (DL_UINT8*)*ioPtr;
-
-    /* init outputs */
-    *oLen = iMaxValue;
-
-    if ( kDL_ISO8583_FIXED != iVarLenDigits ) {
-        *oLen = 0;
-
-        while ( iVarLenDigits > 0 ) {
-            *oLen = (*oLen * 10) + (*tmpPtr) - '0';
-            iVarLenDigits -= 1;
-            tmpPtr++;
-        }
-       
-        /* limit if exceeds max */
-        *oLen = MIN(iMaxValue,*oLen);
-    }
-
-    *ioPtr = tmpPtr;
-
-    return err;
-}
-
-/******************************************************************************/
