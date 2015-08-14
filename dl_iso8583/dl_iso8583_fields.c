@@ -54,11 +54,40 @@ DL_ERR _unpack( DL_UINT16                    iField,
                 DL_UINT8                   **ioPtr );
 
 
-DL_ERR _packLenAscii(DL_UINT32, DL_UINT8, DL_UINT8 **);
-DL_ERR _packAscii();
-DL_ERR _unpackLenAscii();
-DL_ERR _unpackAscii();
+DL_ERR _packLenAscii(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packAscii(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenAscii(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackAscii(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
 
+DL_ERR _packLenEbcdic(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packEbcdic(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenEbcdic(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackEbcdic(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+DL_ERR _packLenBcdLeft(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packBcdLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenBcdLeft(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackBcdLeft(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+DL_ERR _packLenBcdRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packBcdRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenBcdRight(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackBcdRight(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+DL_ERR _packLenNibbleLeft(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packNibbleLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenNibbleLeft(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackNibbleLeft(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+DL_ERR _packLenNibbleRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packNibbleRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenNibbleRight(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackNibbleRight(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+DL_ERR _packLenByte(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packByte(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenByte(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackByte(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
 
 
 /******************************************************************************/
@@ -87,10 +116,10 @@ static DL_ERR VarLen_Get ( const DL_UINT8 **ioPtr,
 //
 
 struct DL_ISO8583_TYPE_S {
-    DL_ERR    (*_packLenFunc)(DL_UINT32, DL_UINT8, DL_UINT8**);
-    DL_ERR    (*_packFunc)(DL_UINT8*, DL_UINT32, DL_UINT32, DL_UINT8**);
-    DL_ERR    (*_unpackLenFunc)(DL_UINT8**, DL_UINT8, DL_UINT32*);
-    DL_ERR    (*_unpackFunc)(DL_UINT8**, DL_UINT32, DL_UINT8**);
+    DL_ERR    (*_packLenFunc)(DL_UINT32, DL_UINT8, DL_UINT8 **);
+    DL_ERR    (*_packFunc)(DL_UINT8 *, DL_UINT32, DL_UINT32, DL_UINT8 **);
+    DL_ERR    (*_unpackLenFunc)(DL_UINT8 **, DL_UINT8, DL_UINT32 *);
+    DL_ERR    (*_unpackFunc)(DL_UINT8 **, DL_UINT32, DL_UINT8 *);
 };
 typedef struct DL_ISO8583_TYPE_S DL_ISO8583_TYPE;
 
@@ -109,8 +138,8 @@ static DL_ISO8583_TYPE fieldTypeArr[] = {
     /* BCD_RIGHT    */ MAKE_FIELD_TYPE_FUNC(BcdRight),
     /* NIBBLE_LEFT  */ MAKE_FIELD_TYPE_FUNC(NibbleLeft),
     /* NIBBLE_RIGHT */ MAKE_FIELD_TYPE_FUNC(NibbleRight),
-    /* BYTE         */ MAKE_FIELD_TYPE_FUNC(Byte),
-    /* BMP          */ MAKE_FIELD_TYPE_FUNC(Bmp)
+    /* BYTE         */ MAKE_FIELD_TYPE_FUNC(Byte)
+    /* BMP          */ /*special handler*/ 
 };
 
 /******************************************************************************/
@@ -135,9 +164,18 @@ DL_ERR _DL_ISO8583_FIELD_Pack ( DL_UINT16                  iField,
     DL_UINT32             inLen         = fieldPtr->len;     //len of the field in field unit, not include padding
     DL_UINT8             *dataPtr       = fieldPtr->ptr;
     DL_UINT32             outLen        = iFieldDefPtr->len; //len of the packed field in field unit, include padding
+
+    if (inLen > outLen) {  //too long input
+        return kDL_ERR_OTHER;
+    }
+    
+    if (DL_ISO8583_IS_BITMAP(fieldDefPtr->fieldType)) {
+        err = _pack_iso_BITMAP(iField, iMsg, fieldDefPtr, ioPtr);
+        return err;
+    }
     
     /* variable length handling */
-    err = VarLen_Put(fieldDefPtr->varLenLen, fieldDefPtr->varLenType, inLen, outLen, &tmpPtr);
+    err = VarLen_Put(fieldDefPtr->varLenLen, fieldDefPtr->varLenType, inLen, &tmpPtr);
 
     //fill the field content
     if (!err) {
@@ -163,6 +201,11 @@ DL_ERR _DL_ISO8583_FIELD_Unpack ( DL_UINT16                  iField,
     DL_UINT32  size       = 0;
     DL_UINT32  sizeAlloc  = 0;
     DL_UINT8  *tmpDataPtr = NULL;
+
+    if (DL_ISO8583_IS_BITMAP(fieldDefPtr->fieldType)) {
+        err = _unpack_iso_BITMAP(iField, ioMsg, fieldDefPtr, ioPtr);
+        return err;
+    }
     
     /* variable length handling */
     err = VarLen_Get(&tmpPtr, fieldDefPtr->varLenLen, fieldDefPtr->varLenType, fieldDefPtr->len, &size);
@@ -174,7 +217,7 @@ DL_ERR _DL_ISO8583_FIELD_Unpack ( DL_UINT16                  iField,
     }
 
     if ( !err ) {
-        err = GetFieldType(fieldDefPtr->fieldType)->_unpackFunc(&tmpPtr, size, &tmpDataPtr);
+        err = GetFieldType(fieldDefPtr->fieldType)->_unpackFunc(&tmpPtr, size, tmpDataPtr);
         *tmpDataPtr = kDL_ASCII_NULL; // null terminate 
     }
 
@@ -318,7 +361,6 @@ DL_ERR _unpack_iso_BITMAP ( DL_UINT16                    iField,
 static DL_ERR VarLen_Put ( DL_UINT8                     varLenLen,
                            DL_UINT8                     varLenType,
                            DL_UINT32                    inLen,
-                           DL_UINT32                   *outLen,
                            DL_UINT8                   **ioPtr )
 {
     DL_ERR       err    = kDL_ERR_NONE;
@@ -366,3 +408,67 @@ static DL_ERR VarLen_Get ( const DL_UINT8 **ioPtr,
     return err;
 }
 
+
+//parse ascii
+DL_ERR _packLenAscii(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr)
+{
+    DL_ERR    err = kDL_ERR_NONE;
+    DL_UINT32 iMod = 0;
+    DL_UINT8  *tmpPtr = *ioPtr;
+    DL_UINT8 i = 0;
+
+    for (i = iVarLenLen; i > 0; i--, iVarLen /= 10) {
+        tmpPtr[i - 1] = '0' + iVarLen % 10;
+    }
+
+    tmpPtr += iVarLenLen;
+
+    *ioPtr = tmpPtr;
+    return err;
+}
+
+DL_ERR _packAscii(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr)
+{
+}
+
+DL_ERR _unpackLenAscii(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen)
+{
+}
+
+DL_ERR _unpackAscii(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr)
+{
+}
+
+//parse ebcdic
+DL_ERR _packLenEbcdic(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packEbcdic(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenEbcdic(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackEbcdic(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+//parse bcd left align
+DL_ERR _packLenBcdLeft(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packBcdLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenBcdLeft(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackBcdLeft(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+//parse bcd right right
+DL_ERR _packLenBcdRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packBcdRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenBcdRight(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackBcdRight(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+//parse nibble left
+DL_ERR _packLenNibbleLeft(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packNibbleLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenNibbleLeft(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackNibbleLeft(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+DL_ERR _packLenNibbleRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packNibbleRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenNibbleRight(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackNibbleRight(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);
+
+DL_ERR _packLenByte(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr);
+DL_ERR _packByte(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr);
+DL_ERR _unpackLenByte(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen);
+DL_ERR _unpackByte(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr);

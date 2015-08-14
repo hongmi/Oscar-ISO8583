@@ -38,11 +38,10 @@ void DL_ISO8583_MSG_Init ( DL_UINT8       *_iStaticBuf,
     DL_MEM_memset((void*)ioMsg,0,sizeof(DL_ISO8583_MSG));
 
     /* set mode to 'static' if required */
-    if ( _iStaticBuf )
-        {
-            ioMsg->sPtrNext = _iStaticBuf;
-            ioMsg->sPtrEnd  = (ioMsg->sPtrNext) + _iStaticBufSize;
-        }
+    if ( _iStaticBuf ) {
+        ioMsg->sPtrNext = _iStaticBuf;
+        ioMsg->sPtrEnd  = (ioMsg->sPtrNext) + _iStaticBufSize;
+    }
 
     return;
 }
@@ -51,16 +50,14 @@ void DL_ISO8583_MSG_Init ( DL_UINT8       *_iStaticBuf,
 
 void DL_ISO8583_MSG_Free ( DL_ISO8583_MSG *ioMsg )
 {
-    if ( NULL == ioMsg->sPtrNext ) /* dynamic mode */
-        {
-            int i;
-
-            for ( i=0; i<=kDL_ISO8583_MAX_FIELD_IDX ; i++ )
-                {
-                    /* free memory (if allocated) */
-                    DL_MEM_free(ioMsg->field[i].ptr);
-                } /* end-for(i) */
-        }
+    if ( NULL == ioMsg->sPtrNext ) { /* dynamic mode */
+        int i;
+        
+        for ( i=0; i<=kDL_ISO8583_MAX_FIELD_IDX ; i++ ) {
+            /* free memory (if allocated) */
+            DL_MEM_free(ioMsg->field[i].ptr);
+        } /* end-for(i) */
+    }
 
     /* init structure */
     DL_MEM_memset((void*)ioMsg,0,sizeof(DL_ISO8583_MSG));
@@ -108,12 +105,11 @@ DL_ERR DL_ISO8583_MSG_SetField_Bin ( DL_UINT16       iField,
     /* allocate memory for the field content */
     err = _DL_ISO8583_MSG_AllocField(iField,_iDataLen,ioMsg,&ptr);
 
-    if ( !err )
-        {
-            DL_MEM_memcpy(ptr,_iData,_iDataLen);
-            /* null terminate */
-            ptr[_iDataLen] = kDL_ASCII_NULL;
-        }
+    if ( !err ) {
+        DL_MEM_memcpy(ptr,_iData,_iDataLen);
+        /* null terminate */
+        ptr[_iDataLen] = kDL_ASCII_NULL;
+    }
 
     return err;
 }
@@ -127,11 +123,10 @@ int DL_ISO8583_MSG_HaveField ( DL_UINT16             iField,
 {
     if ( (NULL != iMsg) &&
          (iField <= kDL_ISO8583_MAX_FIELD_IDX) &&
-         (NULL != iMsg->field[iField].ptr) )
-        {
-            return 1;
-        }
-
+         (NULL != iMsg->field[iField].ptr) ) {
+        return 1;
+    }
+    
     return 0;
 }
 
@@ -151,11 +146,10 @@ DL_ERR DL_ISO8583_MSG_GetField_Str ( DL_UINT16              iField,
 
     if ( (NULL != iMsg) &&
          (iField <= kDL_ISO8583_MAX_FIELD_IDX) &&
-         (NULL != iMsg->field[iField].ptr) )
-        {
-            err   = kDL_ERR_NONE;
-            *oPtr = iMsg->field[iField].ptr;
-        }
+         (NULL != iMsg->field[iField].ptr) ) {
+        err   = kDL_ERR_NONE;
+        *oPtr = iMsg->field[iField].ptr;
+    }
 
     return err;
 }
@@ -179,12 +173,11 @@ DL_ERR DL_ISO8583_MSG_GetField_Bin ( DL_UINT16              iField,
 
     if ( (NULL != iMsg) &&
          (iField <= kDL_ISO8583_MAX_FIELD_IDX) &&
-         (NULL != iMsg->field[iField].ptr) )
-        {
-            err       = kDL_ERR_NONE;
-            *oPtr     = iMsg->field[iField].ptr;
-            *oByteLen = iMsg->field[iField].len;
-        }
+         (NULL != iMsg->field[iField].ptr) ) {
+        err       = kDL_ERR_NONE;
+        *oPtr     = iMsg->field[iField].ptr;
+        *oByteLen = iMsg->field[iField].len;
+    }
 
     return err;
 }
@@ -204,21 +197,18 @@ DL_ERR DL_ISO8583_MSG_Pack ( const DL_ISO8583_HANDLER *iHandler,
     *oNumBytes = 0;
 
     /* pack any fields that are present */
-    for ( fieldIdx=0 ; (fieldIdx<MIN(iHandler->fieldItems,kDL_ISO8583_MAX_FIELD_IDX+1)) && !err ; fieldIdx++ )
-        {
-            if ( (NULL != iMsg->field[fieldIdx].ptr) || // present
-                 DL_ISO8583_IS_BITMAP(iHandler->fieldArr[fieldIdx].fieldType) ) // bitmap
-                {
-                    /* pack field */
-                    err = _DL_ISO8583_FIELD_Pack(fieldIdx,iMsg,iHandler,&curPtr);
-                }
-        } /* end-for(i) */
-
-    if ( !err )
-        {
-            /* determine the number of bytes output */
-            *oNumBytes = (int)(curPtr - ioByteArr);
+    for ( fieldIdx=0 ; (fieldIdx<MIN(iHandler->fieldItems,kDL_ISO8583_MAX_FIELD_IDX+1)) && !err ; fieldIdx++ ) {
+        if ( (NULL != iMsg->field[fieldIdx].ptr) || // present
+             DL_ISO8583_IS_BITMAP(iHandler->fieldArr[fieldIdx].fieldType) ) { // bitmap
+            /* pack field */
+            err = _DL_ISO8583_FIELD_Pack(fieldIdx,iMsg,iHandler,&curPtr);
         }
+    } /* end-for(i) */
+    
+    if ( !err ) {
+        /* determine the number of bytes output */
+        *oNumBytes = (int)(curPtr - ioByteArr);
+    }
 
     return err;
 }
@@ -238,27 +228,23 @@ DL_ERR DL_ISO8583_MSG_Unpack ( const DL_ISO8583_HANDLER *iHandler,
     int        haveBitmap  = 0;
 
     /* unpack all fields until we've encountered a bitmap field */
-    while ( !err && (curFieldIdx < maxFieldIdx) && (curPtr < endPtr) && !haveBitmap )
-        {
-            err = _DL_ISO8583_FIELD_Unpack(curFieldIdx,ioMsg,iHandler,&curPtr);
+    while ( !err && (curFieldIdx < maxFieldIdx) && (curPtr < endPtr) && !haveBitmap ) {
+        err = _DL_ISO8583_FIELD_Unpack(curFieldIdx,ioMsg,iHandler,&curPtr);
+        
+        if ( DL_ISO8583_IS_BITMAP(iHandler->fieldArr[curFieldIdx].fieldType) )
+            haveBitmap = 1;
 
-            if ( DL_ISO8583_IS_BITMAP(iHandler->fieldArr[curFieldIdx].fieldType) )
-                haveBitmap = 1;
-
-            curFieldIdx++;
-
-        } /* end-while */
+        curFieldIdx++;
+    } /* end-while */
 
     /* unpack only present fields (if any) after bitmap field */
-    while ( !err && (curFieldIdx < maxFieldIdx) && (curPtr < endPtr) )
-        {
-            if ( 0 != ioMsg->field[curFieldIdx].len ) /* present */
-                {
-                    err = _DL_ISO8583_FIELD_Unpack(curFieldIdx,ioMsg,iHandler,&curPtr);
-                }
+    while ( !err && (curFieldIdx < maxFieldIdx) && (curPtr < endPtr) ) {
+        if ( 0 != ioMsg->field[curFieldIdx].len ) { /* present */
+            err = _DL_ISO8583_FIELD_Unpack(curFieldIdx,ioMsg,iHandler,&curPtr);
+        }
 
-            curFieldIdx++;
-        } /* end-while */
+        curFieldIdx++;
+    } /* end-while */
 
     /* check for under/over read condition */
     if ( !err && (curPtr != endPtr) )
@@ -277,25 +263,19 @@ void DL_ISO8583_MSG_Dump ( FILE                     *iOutFile,
     DL_UINT16 i;
     char     *tmpEOL = _iEolStr == NULL ? "\n" : _iEolStr;
 
-    fprintf(iOutFile,"%s--------------- ISO8583 MSG DUMP ---------------%s",
-            tmpEOL,tmpEOL);
+    fprintf(iOutFile,"%s--------------- ISO8583 MSG DUMP ---------------%s", tmpEOL,tmpEOL);
 
     /* for each field */
-    for ( i=0 ; i<(iHandler->fieldItems) ; i++ )
-        {
-            if ( NULL != iMsg->field[i].ptr ) /* present */
-                {
-                    DL_ISO8583_FIELD_DEF *fieldDef = DL_ISO8583_GetFieldDef(i,iHandler);
+    for ( i=0 ; i<(iHandler->fieldItems) ; i++ ) {
+        if ( NULL != iMsg->field[i].ptr ) { /* present */
+            DL_ISO8583_FIELD_DEF *fieldDef = DL_ISO8583_GetFieldDef(i,iHandler);
 
-                    fprintf(iOutFile,"[%03d] ",
-                            (int)i);
-                    fprintf(iOutFile,"%s%s",iMsg->field[i].ptr,tmpEOL);
-                }
+            fprintf(iOutFile,"[%03d] ", (int)i);
+            fprintf(iOutFile,"%s%s",iMsg->field[i].ptr,tmpEOL);
+        }
+    } /* end-for(i) */
 
-        } /* end-for(i) */
-
-    fprintf(iOutFile,"------------------------------------------------%s%s",
-            tmpEOL,tmpEOL);
+    fprintf(iOutFile,"------------------------------------------------%s%s", tmpEOL,tmpEOL);
 
     return;
 }
