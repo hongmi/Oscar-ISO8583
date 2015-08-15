@@ -429,14 +429,42 @@ DL_ERR _packLenAscii(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr)
 
 DL_ERR _packAscii(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr)
 {
+    DL_ERR err = kDL_ERR_NONE;
+    
+    if (iDataLen > iOutLen) {
+        err = kDL_ERR_OTHER;
+    } else {
+        memcpy(*ioPtr, iDataPtr, iDataLen);
+        if (iDataLen < iOutLen) {
+            memset(*ioPtr + iDataLen, (int)kDL_ASCII_SP, iOutLen - iDataLen);
+        }
+        *ioPtr += iOutLen;
+    }
+    return err;
 }
 
 DL_ERR _unpackLenAscii(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen)
 {
+    DL_ERR err = kDL_ERR_NONE;
+    DL_UINT8 i = 0;
+    DL_UINT32 len = 0;
+    
+    for (i = 0; i < iVarLenLen; i++) {
+        len = len * 10 + *ioPtr++ - '0';
+    }
+
+    *oLen = len;
+    
+    return err;    
 }
 
 DL_ERR _unpackAscii(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 *oDataPtr)
 {
+    DL_ERR err = kDL_ERR_NONE;
+
+    memcpy(oDataPtr, *ioPtr, iSize);
+
+    return err;
 }
 
 //parse ebcdic
