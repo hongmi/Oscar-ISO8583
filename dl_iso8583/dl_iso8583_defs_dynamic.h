@@ -37,8 +37,7 @@
 // sets the specified handler
 void DL_ISO8583_DEFS_DYNAMIC_GetHandler ( DL_ISO8583_HANDLER    *oHandler,
                                           DL_ISO8583_FIELD_DEF  *iFieldDefArr,
-                                          DL_UINT8               iFieldDefItems,
-                                          DL_UINT8               iCompress );
+                                          DL_UINT8               iFieldDefItems);
 
 /******************************************************************************/
 
