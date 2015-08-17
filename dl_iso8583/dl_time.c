@@ -180,29 +180,26 @@ void DL_TIME_ConvUTCSecondsToLocalStruct ( DL_UINT32  iUtcSecs,
     seconds_to_struct(iUtcSecs,oData);
 
     /* perform Std/DST adjustment (where required) */
-    if ( TZ_INFO_HAS_DST(&_tz) )
-        {
-            int       inDST    = 0;
-            DL_UINT32 dstStart = 0,
+    if ( TZ_INFO_HAS_DST(&_tz) ) {
+        int       inDST    = 0;
+        DL_UINT32 dstStart = 0,
                 dstEnd   = 0;
 
-            calc_dst_start_end(oData->year,&dstStart,&dstEnd);
+        calc_dst_start_end(oData->year,&dstStart,&dstEnd);
 
-            if ( ((dstStart <= dstEnd) &&  (iUtcSecs >= dstStart) && (iUtcSecs < dstEnd))  ||
-                 ((dstStart >  dstEnd) && ((iUtcSecs >= dstStart) || (iUtcSecs < dstEnd))) )
-                {
-                    inDST = 1;
-                }
-
-            if ( inDST )
-                {
-                    /* apply DST bias */
-                    iUtcSecs += TZ_INFO_DST_BIAS(&_tz);
-                }
-
-            /* convert seconds to struct */
-            seconds_to_struct(iUtcSecs,oData);
+        if ( ((dstStart <= dstEnd) &&  (iUtcSecs >= dstStart) && (iUtcSecs < dstEnd))  ||
+             ((dstStart >  dstEnd) && ((iUtcSecs >= dstStart) || (iUtcSecs < dstEnd))) ) {
+            inDST = 1;
         }
+
+        if ( inDST ) {
+            /* apply DST bias */
+            iUtcSecs += TZ_INFO_DST_BIAS(&_tz);
+        }
+
+        /* convert seconds to struct */
+        seconds_to_struct(iUtcSecs,oData);
+    }
 
     return;
 }
@@ -264,11 +261,10 @@ int DL_TIME_ConvUTCTimestampToUTCSeconds ( const char  iTimestamp[],
     /* timestamp (utc) to struct (utc) */
     ok = timestamp_to_struct(iTimestamp,&st);
 
-    if ( ok )
-        {
-            /* struct (utc) to seconds (utc) */
-            struct_to_seconds(0,&st,oUtcSecs);
-        }
+    if ( ok ) {
+        /* struct (utc) to seconds (utc) */
+        struct_to_seconds(0,&st,oUtcSecs);
+    }
 
     return ok;
 }
@@ -290,39 +286,34 @@ int DL_TIME_ConvLocalTimestampToUTCSeconds ( const char  iTimestamp[],
     /* timestamp (local) to struct (local) */
     ok = timestamp_to_struct(iTimestamp,&st);
 
-    if ( ok )
-        {
-            /* struct (local) to seconds (local) */
-            struct_to_seconds(0,&st,oUtcSecs);
+    if ( ok ) {
+        /* struct (local) to seconds (local) */
+        struct_to_seconds(0,&st,oUtcSecs);
 
-            /* perform Std/DST adjustment (where required) */
-            if ( TZ_INFO_HAS_DST(&_tz) )
-                {
-                    int       inDST    = 0;
-                    DL_UINT32 dstStart = 0,
-                        dstEnd   = 0;
+        /* perform Std/DST adjustment (where required) */
+        if ( TZ_INFO_HAS_DST(&_tz) ) {
+            int       inDST    = 0;
+            DL_UINT32 dstStart = 0, dstEnd   = 0;
 
-                    calc_dst_start_end(st.year,&dstStart,&dstEnd);
+            calc_dst_start_end(st.year,&dstStart,&dstEnd);
 
-                    dstStart += TZ_INFO_DST_BIAS(&_tz);
-                    dstEnd   -= TZ_INFO_DST_BIAS(&_tz);
+            dstStart += TZ_INFO_DST_BIAS(&_tz);
+            dstEnd   -= TZ_INFO_DST_BIAS(&_tz);
 
-                    if ( ((dstStart <= dstEnd) &&  (*oUtcSecs >= dstStart) && (*oUtcSecs < dstEnd))  ||
-                         ((dstStart >  dstEnd) && ((*oUtcSecs >= dstStart) || (*oUtcSecs < dstEnd))) )
-                        {
-                            inDST = 1;
-                        }
+            if ( ((dstStart <= dstEnd) &&  (*oUtcSecs >= dstStart) && (*oUtcSecs < dstEnd))  ||
+                 ((dstStart >  dstEnd) && ((*oUtcSecs >= dstStart) || (*oUtcSecs < dstEnd))) ) {
+                inDST = 1;
+            }
 
-                    if ( inDST )
-                        {
-                            /* remove DST bias */
-                            *oUtcSecs -= TZ_INFO_DST_BIAS(&_tz);
-                        }
-                }
-
-            /* remove base Bias to UTC value */
-            *oUtcSecs -= TZ_INFO_BASE_BIAS(&_tz);
+            if ( inDST ) {
+                /* remove DST bias */
+                *oUtcSecs -= TZ_INFO_DST_BIAS(&_tz);
+            }
         }
+
+        /* remove base Bias to UTC value */
+        *oUtcSecs -= TZ_INFO_BASE_BIAS(&_tz);
+    }
 
     return ok;
 }
@@ -364,42 +355,36 @@ int _DL_TIME_AddMonths ( DL_UINT32  iSeconds,
     /* convert to nice date/time format */
     DL_TIME_ConvUTCSecondsToUTCStruct(iSeconds,&dt);
 
-    if ( ok )
-        {
-            int years  = iNumMonths / 12;
-            int months = iNumMonths % 12;
+    if ( ok ) {
+        int years  = iNumMonths / 12;
+        int months = iNumMonths % 12;
 
-            /* add whole years */
-            dt.year += years;
+        /* add whole years */
+        dt.year += years;
 
-            /* add partial months (may cause year overflow) */
-            if ( (dt.month + months) <= 12 ) /* same year */
-                {
-                    dt.month += months;
-                }
-            else /* next year */
-                {
-                    dt.year++;
-                    dt.month = (dt.month + months) - 12;
-                }
-
-            /* adjust 'day' if exceeds maximum for month/year combination */
-            dt.day = MAX(dt.day,calc_days_in_month(dt.year,dt.month));
+        /* add partial months (may cause year overflow) */
+        if ( (dt.month + months) <= 12 ) /* same year */  {
+            dt.month += months;
+        } else /* next year */ {
+            dt.year++;
+            dt.month = (dt.month + months) - 12;
         }
+
+        /* adjust 'day' if exceeds maximum for month/year combination */
+        dt.day = MAX(dt.day,calc_days_in_month(dt.year,dt.month));
+    }
 
     /* convert back to seconds and pass to caller */
-    if ( ok )
-        {
-            /* struct (utc) to seconds (utc) */
-            struct_to_seconds(0,&dt,oSeconds);
-        }
+    if ( ok ) {
+        /* struct (utc) to seconds (utc) */
+        struct_to_seconds(0,&dt,oSeconds);
+    }
 
     /* check for seconds overflow */
-    if ( ok && (iSeconds > *oSeconds) )
-        {
-            /* overflow because input is greater than output */
-            ok = 0;
-        }
+    if ( ok && (iSeconds > *oSeconds) ) {
+        /* overflow because input is greater than output */
+        ok = 0;
+    }
 
     return ok;
 }
@@ -439,52 +424,45 @@ static void _get_tz_info ( void )
         /* get timezone */
         rc = GetTimeZoneInformation(&winTZ);
 
-        if ( rc == TIME_ZONE_ID_UNKNOWN )
-            {
-                /* timezone does NOT have DST */
-                _tz.hasDST = 0;
-            }
-        else if ( (rc == TIME_ZONE_ID_STANDARD) ||
-                  (rc == TIME_ZONE_ID_DAYLIGHT) )
-            {
-                /* timezone has DST */
-                _tz.hasDST = 1;
-            }
-        else /* unexpected error */
-            {
-                /* indicate local error */
-                /* NB timezone will default to UTC with no DST */
-                tempOk = 0;
-            }
+        if ( rc == TIME_ZONE_ID_UNKNOWN ) {
+            /* timezone does NOT have DST */
+            _tz.hasDST = 0;
+        } else if ( (rc == TIME_ZONE_ID_STANDARD) || (rc == TIME_ZONE_ID_DAYLIGHT) ) {
+            /* timezone has DST */
+            _tz.hasDST = 1;
+        } else /* unexpected error */ {
+            /* indicate local error */
+            /* NB timezone will default to UTC with no DST */
+            tempOk = 0;
+        }
 
-        if ( tempOk )
-            {
-                /* base bias */
-                _tz.baseBias = (winTZ.Bias * -1) * 60;
+        if ( tempOk ) {
+            /* base bias */
+            _tz.baseBias = (winTZ.Bias * -1) * 60;
 
-                /* DST bias */
-                _tz.dstBias = (winTZ.DaylightBias * -1) * 60;
+            /* DST bias */
+            _tz.dstBias = (winTZ.DaylightBias * -1) * 60;
 
-                /* DST start */
-                DL_TIME_Populate(winTZ.DaylightDate.wYear,
-                                 winTZ.DaylightDate.wMonth,
-                                 winTZ.DaylightDate.wDay,
-                                 winTZ.DaylightDate.wHour,
-                                 winTZ.DaylightDate.wMinute,
-                                 winTZ.DaylightDate.wSecond,
-                                 winTZ.DaylightDate.wDayOfWeek,
-                                 &(_tz.dstStart));
+            /* DST start */
+            DL_TIME_Populate(winTZ.DaylightDate.wYear,
+                             winTZ.DaylightDate.wMonth,
+                             winTZ.DaylightDate.wDay,
+                             winTZ.DaylightDate.wHour,
+                             winTZ.DaylightDate.wMinute,
+                             winTZ.DaylightDate.wSecond,
+                             winTZ.DaylightDate.wDayOfWeek,
+                             &(_tz.dstStart));
 
-                /* DST end */
-                DL_TIME_Populate(winTZ.StandardDate.wYear,
-                                 winTZ.StandardDate.wMonth,
-                                 winTZ.StandardDate.wDay,
-                                 winTZ.StandardDate.wHour,
-                                 winTZ.StandardDate.wMinute,
-                                 winTZ.StandardDate.wSecond,
-                                 winTZ.StandardDate.wDayOfWeek,
-                                 &(_tz.dstEnd));
-            }
+            /* DST end */
+            DL_TIME_Populate(winTZ.StandardDate.wYear,
+                             winTZ.StandardDate.wMonth,
+                             winTZ.StandardDate.wDay,
+                             winTZ.StandardDate.wHour,
+                             winTZ.StandardDate.wMinute,
+                             winTZ.StandardDate.wSecond,
+                             winTZ.StandardDate.wDayOfWeek,
+                             &(_tz.dstEnd));
+        }
 
         /* indicate TZ details loaded */
         _haveTZ = 1;
@@ -534,12 +512,12 @@ static void seconds_to_struct ( DL_UINT32  iSeconds,
     int       done;
     DL_UINT32 tempUInt32;
     int       year   = kMIN_YEAR,
-        month  = 1,
-        day    = 1,
-        hour   = 0,
-        minute = 0,
-        second = 0,
-        DoW    = 0;
+            month  = 1,
+            day    = 1,
+            hour   = 0,
+            minute = 0,
+            second = 0,
+            DoW    = 0;
 
     /* init ouput parameters */
     DL_MEM_memset(oData,0,sizeof(DL_TIME));
@@ -553,38 +531,30 @@ static void seconds_to_struct ( DL_UINT32  iSeconds,
 
     /* calculate the year (1970-2106) */
     done = 0;
-    do
-        {
-            /* determine the number of seconds for this year */
-            tempUInt32 = isLeapYear(year) ? kSECONDS_IN_LEAP_YEAR : kSECONDS_IN_NORMAL_YEAR;
+    do {
+        /* determine the number of seconds for this year */
+        tempUInt32 = isLeapYear(year) ? kSECONDS_IN_LEAP_YEAR : kSECONDS_IN_NORMAL_YEAR;
 
-            if ( iSeconds >= tempUInt32 )
-                {
-                    year++;
-                    iSeconds -= tempUInt32;
-                }
-            else
-                {
-                    done = 1;
-                }
-        } while ( !done );
+        if ( iSeconds >= tempUInt32 ) {
+            year++;
+            iSeconds -= tempUInt32;
+        } else {
+            done = 1;
+        }
+    } while ( !done );
     
     /* calculate 'month' (1-12) */
-    for ( i=0,done=0 ; (i<12) && (!done) ; i++ )
-        {
-            /* determine number of seconds for month (i+1) */
-            tempUInt32 = (calc_days_in_month(year,month) * kSECONDS_IN_DAY);
+    for ( i=0,done=0 ; (i<12) && (!done) ; i++ ) {
+        /* determine number of seconds for month (i+1) */
+        tempUInt32 = (calc_days_in_month(year,month) * kSECONDS_IN_DAY);
         
-            if ( iSeconds >= tempUInt32 )
-                {
-                    month++;
-                    iSeconds -= tempUInt32;
-                }
-            else
-                {
-                    done = 1;
-                }
-        } /* end-for */
+        if ( iSeconds >= tempUInt32 ) {
+            month++;
+            iSeconds -= tempUInt32;
+        } else {
+            done = 1;
+        }
+    } /* end-for */
     
     /* calculate 'day' (1-n) */
     day      += iSeconds / kSECONDS_IN_DAY;
@@ -640,13 +610,12 @@ static void struct_to_seconds ( int            _iYear,
     rationalise_struct(_iYear,iData,&tmpSt);
 
     /* process 'year' */
-    for ( i=kMIN_YEAR ; i<tmpSt.year ; i++ )
-        {
-            *oSeconds += kSECONDS_IN_NORMAL_YEAR;
+    for ( i=kMIN_YEAR ; i<tmpSt.year ; i++ ) {
+        *oSeconds += kSECONDS_IN_NORMAL_YEAR;
 
-            if ( isLeapYear(i) ) /* is a leap year */
-                *oSeconds += kSECONDS_IN_DAY;
-        }
+        if ( isLeapYear(i) ) /* is a leap year */
+            *oSeconds += kSECONDS_IN_DAY;
+    }
 
     /* process 'month' */
     for ( i=1 ; i<tmpSt.month ; i++ )
@@ -679,11 +648,11 @@ static int timestamp_to_struct ( const char *iTimestampStr,
 {
     int ok     = 1;
     int year   = 0,
-        month  = 0,
-        day    = 0,
-        hour   = 0,
-        minute = 0,
-        second = 0;
+            month  = 0,
+            day    = 0,
+            hour   = 0,
+            minute = 0,
+            second = 0;
 
     /* init output params */
     DL_MEM_memset(oData,0,sizeof(DL_TIME));
@@ -693,18 +662,16 @@ static int timestamp_to_struct ( const char *iTimestampStr,
 
     /* check that date/time string is within the required range */
     if ( ok && ((DL_STR_StrCmp(iTimestampStr,kTIMESTAMP_MIN_VALUE,0) == -1) ||
-                (DL_STR_StrCmp(iTimestampStr,kTIMESTAMP_MAX_VALUE,0) ==  1)) )
-        {
-            ok = 0;
-        }
+                (DL_STR_StrCmp(iTimestampStr,kTIMESTAMP_MAX_VALUE,0) ==  1)) ) {
+        ok = 0;
+    }
 
     /* decompose timestamp into individual parts */
-    if ( ok )
-        {
-            /* split string into date/time parts */
-            sscanf(iTimestampStr,"%04d%02d%02d%02d%02d%02d",
-                   &year,&month,&day,&hour,&minute,&second);
-        }
+    if ( ok ) {
+        /* split string into date/time parts */
+        sscanf(iTimestampStr,"%04d%02d%02d%02d%02d%02d",
+               &year,&month,&day,&hour,&minute,&second);
+    }
 
     /* NB min/max year has already been validated */
 
@@ -728,12 +695,11 @@ static int timestamp_to_struct ( const char *iTimestampStr,
     if ( ok && !((second >= 0) && (second <= 59)) )
         ok = 0;
 
-    if ( ok )
-        {
-            DL_TIME_Populate(year,month,day,hour,minute,second,
-                             calc_day_of_week(year,month,day),
-                             oData);
-        }
+    if ( ok ) {
+        DL_TIME_Populate(year,month,day,hour,minute,second,
+                         calc_day_of_week(year,month,day),
+                         oData);
+    }
 
     return ok;
 }
@@ -751,54 +717,43 @@ static void rationalise_struct ( int            _iYear,
     DL_MEM_memcpy(oData,iData,sizeof(DL_TIME));
 
     /* perform 'day-in-month' processing (where required) */
-    if ( iData->year == 0 )
-        {
-            int DoW   = 0;
-            int first = 1;
+    if ( iData->year == 0 ) {
+        int DoW   = 0;
+        int first = 1;
 
-            /* set 'Year */
-            oData->year = _iYear;
+        /* set 'Year */
+        oData->year = _iYear;
 
-            /* check that valid '_year' was provided by caller */
-            if ( !((_iYear >= kMIN_YEAR) && (_iYear <= kMAX_YEAR)) ) /* invalid */
-                _iYear = kMIN_YEAR; /* default to min valid year */
+        /* check that valid '_year' was provided by caller */
+        if ( !((_iYear >= kMIN_YEAR) && (_iYear <= kMAX_YEAR)) ) /* invalid */
+            _iYear = kMIN_YEAR; /* default to min valid year */
 
-            /* determine 1st day of '_year' */
-            for ( DoW=kFIRST_DAY_1970,i=kMIN_YEAR ; i<_iYear ; i++ )
-                {
-                    DoW = (DoW + kDAYS_IN_NORMAL_YEAR + (isLeapYear(i) ? 1 : 0)) % 7;
-                }
-
-            /* determine 1st day of 'month' */
-            for ( i=1 ; i<iData->month ; i++ )
-                {
-                    DoW = (DoW + calc_days_in_month(_iYear,i)) % 7;
-                }
-
-            /* get 1st desired day in month */
-            if ( iData->_dayOfWeek > DoW )
-                {
-                    first += iData->_dayOfWeek - DoW;
-                }
-            else if ( iData->_dayOfWeek < DoW )
-                {
-                    first += 7 - (DoW - iData->_dayOfWeek);
-                }
-
-            /* determine 'day' */
-            if ( iData->day >= 5 ) /* last day of month */
-                {
-                    oData->day = (((calc_days_in_month(_iYear,iData->month) - first) / 7) * 7) + first;
-                }
-            else if ( iData->day > 0 ) /* day 1-4 */
-                {
-                    oData->day = first + ((iData->day - 1) * 7);
-                }
-            else /* invalid */
-                {
-                    oData->day = first;
-                }
+        /* determine 1st day of '_year' */
+        for ( DoW=kFIRST_DAY_1970,i=kMIN_YEAR ; i<_iYear ; i++ ) {
+            DoW = (DoW + kDAYS_IN_NORMAL_YEAR + (isLeapYear(i) ? 1 : 0)) % 7;
         }
+
+        /* determine 1st day of 'month' */
+        for ( i=1 ; i<iData->month ; i++ ) {
+            DoW = (DoW + calc_days_in_month(_iYear,i)) % 7;
+        }
+
+        /* get 1st desired day in month */
+        if ( iData->_dayOfWeek > DoW ) {
+            first += iData->_dayOfWeek - DoW;
+        } else if ( iData->_dayOfWeek < DoW ) {
+            first += 7 - (DoW - iData->_dayOfWeek);
+        }
+
+        /* determine 'day' */
+        if ( iData->day >= 5 ) /* last day of month */ {
+            oData->day = (((calc_days_in_month(_iYear,iData->month) - first) / 7) * 7) + first;
+        } else if ( iData->day > 0 ) /* day 1-4 */ {
+            oData->day = first + ((iData->day - 1) * 7);
+        } else /* invalid */ {
+            oData->day = first;
+        }
+    }
 
     return;
 }
@@ -814,25 +769,22 @@ static int calc_day_of_week ( int iYear,
     DL_UINT32 numDays = kFIRST_DAY_1970;
 
     /* calculate days for full years */
-    for ( i=kMIN_YEAR ; i<iYear ; i++ )
-        {
-            numDays += kDAYS_IN_NORMAL_YEAR;
+    for ( i=kMIN_YEAR ; i<iYear ; i++ ) {
+        numDays += kDAYS_IN_NORMAL_YEAR;
 
-            if ( isLeapYear(i) )
-                numDays++;
-        }
+        if ( isLeapYear(i) )
+            numDays++;
+    }
 
     /* calculate days for full months */
-    for ( i=1 ; i<iMonth ; i++ )
-        {
-            numDays += calc_days_in_month(iYear,i);
-        }
+    for ( i=1 ; i<iMonth ; i++ ) {
+        numDays += calc_days_in_month(iYear,i);
+    }
 
     /* calculate days for month days */
-    if ( iDay > 1 )
-        {
-            numDays += iDay - 1;
-        }
+    if ( iDay > 1 ) {
+        numDays += iDay - 1;
+    }
 
     DoW = (int)(numDays % 7);
 
@@ -847,14 +799,11 @@ static int calc_days_in_month ( int iYear,
     int days = 0;
     int daysInMonth[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
 
-    if ( (iMonth == 2) && isLeapYear(iYear) )
-        {
-            days = 29;
-        }
-    else if ( (iMonth >= 1) && (iMonth <= 12) )
-        {
-            days = daysInMonth[iMonth-1];
-        }
+    if ( (iMonth == 2) && isLeapYear(iYear) ) {
+        days = 29;
+    } else if ( (iMonth >= 1) && (iMonth <= 12) ) {
+        days = daysInMonth[iMonth-1];
+    }
 
     return days;
 }
