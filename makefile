@@ -7,8 +7,7 @@ all: iso8583 publish demo benchmark
 clean:
 	make -C dl_iso8583 clean
 	rm -f benchmark demo  *.o *~
-	rm -f include/* lib/*
-	rmdir include lib
+	rm include lib -rf
 
 iso8583:
 	make -C dl_iso8583
