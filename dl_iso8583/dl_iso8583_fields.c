@@ -249,10 +249,15 @@ DL_ERR _DL_ISO8583_FIELD_Pack ( DL_UINT16                  iField,
         err = _pack_iso_BITMAP(iField, iMsg, fieldDefPtr, ioPtr);
         return err;
     }
-    
-    /* variable length handling */
-    err = VarLen_Put(fieldDefPtr->varLenLen, fieldDefPtr->varLenType, inLen, &outLen, &tmpPtr);
 
+    if (fieldDefPtr->varLenLen > 0) {
+        /* variable length handling */
+        err = VarLen_Put(fieldDefPtr->varLenLen, fieldDefPtr->varLenType, inLen, &outLen, &tmpPtr);
+    } 
+    if (DL_ISO8583_IS_PARTIAL_TYPE(fieldDefPtr->fieldType)) {  //partial byte need padding
+        outLen += outLen % 2;
+    }
+    
     //fill the field content
     if (!err) {
         err = GetFieldType(fieldDefPtr->fieldType)->_packFunc(dataPtr, inLen, outLen, &tmpPtr);
@@ -288,7 +293,7 @@ DL_ERR _DL_ISO8583_FIELD_Unpack ( DL_UINT16                  iField,
 
     /* allocate field */
     if ( !err ) {
-        sizeAlloc = DL_ISO8583_FIELD_LEN_IN_BYTE(fieldDefPtr->fieldType, size);
+        sizeAlloc = DL_ISO8583_IS_PARTIAL_TYPE(fieldDefPtr->fieldType) ? (size * 1) : size;
         err = _DL_ISO8583_MSG_AllocField(iField, sizeAlloc, ioMsg, &tmpDataPtr);
     }
 
@@ -443,14 +448,13 @@ static DL_ERR VarLen_Put ( DL_UINT8                     iVarLenLen,
     DL_ERR       err    = kDL_ERR_NONE;
     DL_UINT8    *tmpPtr = *ioPtr;
 
-    // fixed len, we do nothing
+    // fixed len, we calculate the olen
     if (iVarLenLen <= 0) {
         return err;
     }
 
     err = GetFieldType(iVarLenType)->_packLenFunc(iVarLen, iVarLenLen, &tmpPtr);
-
-    *oLen = iVarLen + iVarLen % 2;
+    *oLen = iVarLen;
     *ioPtr = tmpPtr;
 
     return err;
@@ -543,6 +547,7 @@ DL_ERR _unpackAscii(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPtr)
     memcpy(*ioDataPtr, *ioPtr, iSize);
 
     *ioDataPtr += iSize;
+    *ioPtr += iSize;
     return err;
 }
 
@@ -676,7 +681,7 @@ DL_ERR _packBcdLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, D
         }
     }
     
-    *ioPtr = tmpPtr;
+    *ioPtr += iOutLen / 2;
     return err;
 }
 
@@ -704,7 +709,11 @@ DL_ERR _unpackBcdLeft(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPtr)
             *tmpDataPtr++ = ((*tmpPtr >> 4) & 0x0F) + '0';
         }
     }
-    
+
+    if (iSize % 2) {  //skip last bcd
+        tmpPtr++;
+    }
+            
     *ioPtr = tmpPtr;
     *ioDataPtr = tmpDataPtr;
     return err;
@@ -719,11 +728,11 @@ DL_ERR _packLenBcdRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr
     DL_UINT32 i = 0;
     DL_UINT32 iDigitNum = numOfDigits(iVarLen);
     DL_UINT32 lenTmp = iVarLen;
-    DL_UINT8 *tmpPtr = *ioPtr + iVarLenLen;  // point to last bcd's byte
+    DL_UINT8 *tmpPtr = *ioPtr + iVarLenLen - 1;  // point to last bcd's byte
 
     for (i = 0; i < iDigitNum; i++, lenTmp /= 10) {
         if (i % 2) {
-            *tmpPtr-- += ((lenTmp % 10) < 4);
+            *tmpPtr-- += ((lenTmp % 10) << 4);
         } else {
             *tmpPtr += lenTmp % 10;
         }        
@@ -737,8 +746,8 @@ DL_ERR _packLenBcdRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr
 DL_ERR _packBcdRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr)
 {
     DL_ERR err = kDL_ERR_NONE;
-    DL_UINT8 *tmpPtr = *ioPtr + iOutLen / 2;
-    DL_UINT8 *iDataTmpPtr = iDataPtr + (iDataLen - 1) / 2;
+    DL_UINT8 *tmpPtr = *ioPtr + iOutLen / 2 - 1 ;
+    DL_UINT8 *iDataTmpPtr = iDataPtr + iDataLen - 1;
     DL_UINT8 i = 0;
 
     //check out space is double nibbles
@@ -751,9 +760,9 @@ DL_ERR _packBcdRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, 
     
     for (i = 0; i < iDataLen; i++) {
         if (i % 2) {
-            *tmpPtr-- += (*iDataPtr-- - '0') & 0x0F ;
+            *tmpPtr-- += ((*iDataTmpPtr-- - '0') << 4) & 0xF0;
         } else {
-            *tmpPtr += ((*iDataPtr-- - '0') << 4) & 0xF0;
+            *tmpPtr += (*iDataTmpPtr-- - '0') & 0x0F;
         }
     }
     
@@ -790,7 +799,7 @@ DL_ERR _unpackBcdRight(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPtr)
         if (i % 2) {
             tmpDataPtr[i] = (tmpPtr[i / 2] & 0x0F) + '0';
         } else {
-            tmpDataPtr[i] = (tmpPtr[i / 2] >> 4) & 0x0F + '0';
+            tmpDataPtr[i] = ((tmpPtr[i / 2] >> 4) & 0x0F) + '0';
         }
     }
 
@@ -833,7 +842,7 @@ DL_ERR _packNibbleLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen
             tmpChar = *iDataPtr - '0';
         
         if (i % 2) {
-            *tmpPtr++ += tmpChar & 0x0F ;
+            *tmpPtr++ += tmpChar & 0x0F;
         } else {
             *tmpPtr += (tmpChar << 4) & 0xF0;
         }
@@ -864,7 +873,7 @@ DL_ERR _unpackNibbleLeft(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPtr
         if (i % 2) {
             tmpN = (*tmpPtr++ & 0x0F);
         } else {
-            tmpN = ((*tmpPtr >> 4) & 0x0F);
+            tmpN = (*tmpPtr >> 4) & 0x0F;
         }
         if (tmpN >= 0x0A) {
             *tmpDataPtr++ = tmpN - 0x0A + 'A';
@@ -960,9 +969,9 @@ DL_ERR _unpackNibbleRight(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPt
     
     for (i = 0; i < iSize; i++) {
         if (i % 2) {
-            tmpN = (*tmpPtr-- & 0x0F);
+            tmpN = *tmpPtr-- & 0x0F;
         } else {
-            tmpN = ((*tmpPtr >> 4) & 0x0F);
+            tmpN = (*tmpPtr >> 4) & 0x0F;
         }
         if (tmpN >= 0x0A) {
             *tmpDataPtr-- = tmpN - 0x0A + 'A';

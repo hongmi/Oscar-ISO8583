@@ -1,22 +1,23 @@
 CC=gcc -g
-INCLUDE=-Iinclude
-LIBRARY=-Llib
+SRCDIR=dl_iso8583
+INCLUDE=-I${SRCDIR}
+LIBRARY=-L${SRCDIR}
 
-all: iso8583 publish demo benchmark 
+all: iso8583 demo benchmark 
 
 clean:
 	make -C dl_iso8583 clean
 	rm -f benchmark demo  *.o *~
 	rm include lib -rf
 
-iso8583:
+iso8583: 
 	make -C dl_iso8583
 
-benchmark:
+benchmark:benchmark.c iso8583
 	${CC} ${INCLUDE} -c benchmark.c 
 	${CC} -o benchmark benchmark.o ${LIBRARY} -liso8583
 
-demo:
+demo:demo.c iso8583
 	${CC} ${INCLUDE} -c demo.c 
 	${CC} -o demo demo.o ${LIBRARY} -liso8583
 

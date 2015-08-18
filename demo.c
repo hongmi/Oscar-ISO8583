@@ -13,7 +13,7 @@ int main ( void )
     DL_ISO8583_HANDLER isoHandler;
     DL_ISO8583_MSG     isoMsg;
     DL_UINT8           packBuf[1000];
-    DL_UINT16          packedSize;
+    DL_UINT32          packedSize;
 
 
     /* get ISO-8583 1993 handler */

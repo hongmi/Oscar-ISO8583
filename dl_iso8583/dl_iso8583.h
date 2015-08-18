@@ -99,13 +99,13 @@ DL_ERR DL_ISO8583_MSG_GetField_Bin ( DL_UINT16              iField,
 DL_ERR DL_ISO8583_MSG_Pack ( const DL_ISO8583_HANDLER *iHandler,
                              const DL_ISO8583_MSG     *iMsg,
                              DL_UINT8                 *ioByteArr,
-                             DL_UINT16                *oNumBytes );
+                             DL_UINT32                *oNumBytes );
 
 // NB 'ioMsg' must be initialised (using 'DL_ISO_MSG_Init') before calling
 // returns: error code
 DL_ERR DL_ISO8583_MSG_Unpack ( const DL_ISO8583_HANDLER *iHandler,
                                const DL_UINT8           *iByteArr,
-                               DL_UINT16                 iByteArrSize,
+                               DL_UINT32                 iByteArrSize,
                                DL_ISO8583_MSG           *ioMsg );
 
 /******************************************************************************/

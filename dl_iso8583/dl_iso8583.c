@@ -187,7 +187,7 @@ DL_ERR DL_ISO8583_MSG_GetField_Bin ( DL_UINT16              iField,
 DL_ERR DL_ISO8583_MSG_Pack ( const DL_ISO8583_HANDLER *iHandler,
                              const DL_ISO8583_MSG     *iMsg,
                              DL_UINT8                 *ioByteArr,
-                             DL_UINT16                *oNumBytes )
+                             DL_UINT32                *oNumBytes )
 {
     DL_ERR     err       = kDL_ERR_NONE;
     DL_UINT8  *curPtr    = ioByteArr;
@@ -217,14 +217,14 @@ DL_ERR DL_ISO8583_MSG_Pack ( const DL_ISO8583_HANDLER *iHandler,
 
 DL_ERR DL_ISO8583_MSG_Unpack ( const DL_ISO8583_HANDLER *iHandler,
                                const DL_UINT8           *iByteArr,
-                               DL_UINT16                 iByteArrSize,
+                               DL_UINT32                 iByteArrSize,
                                DL_ISO8583_MSG           *ioMsg )
 {
     DL_ERR     err         = kDL_ERR_NONE;
     DL_UINT8  *curPtr      = (DL_UINT8*)iByteArr;
     DL_UINT8  *endPtr      = curPtr + iByteArrSize;
     DL_UINT16  curFieldIdx = 0;
-    DL_UINT16  maxFieldIdx = MIN(kDL_ISO8583_MAX_FIELD_IDX,(iHandler->fieldItems)-1);
+    DL_UINT16  maxFieldIdx = MIN(kDL_ISO8583_MAX_FIELD_IDX + 1, iHandler->fieldItems);
     int        haveBitmap  = 0;
 
     /* unpack all fields until we've encountered a bitmap field */

@@ -66,14 +66,12 @@
 // Indicates whehter the field type is valid
 #define DL_ISO8583_INVALID_FIELD_TYPE(t) (((t) >= kDL_ISO8583_ASCII) && ((t) <= kDL_ISO8583_BMP))
 
-// Gets the field unpack space in bytes
-#define DL_ISO8583_FIELD_LEN_IN_BYTE(fieldType, size)           \
-    (((fieldType) == kDL_ISO8583_BCD_LEFT      ||    \
-      (fieldType) == kDL_ISO8583_BCD_RIGHT     ||    \
-      (fieldType) == kDL_ISO8583_NIBBLE_LEFT   ||    \
-      (fieldType) == kDL_ISO8583_NIBBLE_RIGHT) ?     \
-     ((size) * 2) : (size))
-
+// bcd, nibble are partial byte
+#define DL_ISO8583_IS_PARTIAL_TYPE(fieldType) \
+    ((fieldType) == kDL_ISO8583_BCD_LEFT      ||     \
+     (fieldType) == kDL_ISO8583_BCD_RIGHT     ||     \
+     (fieldType) == kDL_ISO8583_NIBBLE_LEFT   ||     \
+     (fieldType) == kDL_ISO8583_NIBBLE_RIGHT)
 
 /******************************************************************************/
 //
