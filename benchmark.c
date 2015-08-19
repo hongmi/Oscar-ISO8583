@@ -18,9 +18,14 @@
 // dynamic memory allocation will be used
 //#define USE_STATIC_MEMORY 
 
+void err_exit(const char *s, DL_ERR e) {
+    printf("%s, error:%d\n", s, e);
+    exit(e);
+}
 
 int main ( void )
 {
+    DL_ERR             err = kDL_ERR_NONE;
     DL_TIMER           t;
     DL_ISO8583_HANDLER isoHandler;
     DL_ISO8583_MSG     isoMsg;
@@ -41,7 +46,7 @@ int main ( void )
 #endif
 
     /* set ISO message fields */
-    (void)DL_ISO8583_MSG_SetField_Str(0,"0800",&isoMsg);
+    (void)DL_ISO8583_MSG_SetField_Str(0,"08001",&isoMsg);
     (void)DL_ISO8583_MSG_SetField_Str(2,"454000000000003",&isoMsg);
     (void)DL_ISO8583_MSG_SetField_Str(3,"000000",&isoMsg);
     (void)DL_ISO8583_MSG_SetField_Str(11,"002001",&isoMsg);
@@ -66,9 +71,11 @@ int main ( void )
 
     for ( i=0 ; i<kITERATIONS ; i++ ) {
 
-        printf("%d\n",i);
+        //printf("%ld\n",i);
         
-        (void)DL_ISO8583_MSG_Pack(&isoHandler,&isoMsg,buf,&bufSize);
+        if (err = DL_ISO8583_MSG_Pack(&isoHandler,&isoMsg,buf,&bufSize)) {
+            err_exit("DL_ISO8583_MSG_PACK", err);
+        }
 
         /* destroy ISO Msg */
         DL_ISO8583_MSG_Free(&isoMsg);
@@ -84,7 +91,9 @@ int main ( void )
         DL_ISO8583_MSG_Init(NULL,0,&isoMsg);
 #endif
 
-        (void)DL_ISO8583_MSG_Unpack(&isoHandler,buf,bufSize,&isoMsg);
+        if (err = DL_ISO8583_MSG_Unpack(&isoHandler,buf,bufSize,&isoMsg)) {
+            err_exit("DL_ISO8583_MSG_UNPACK", err);
+        }
 
         /* output ISO message content */
         if (i == 0)

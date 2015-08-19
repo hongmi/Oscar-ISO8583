@@ -55,6 +55,7 @@ void DL_ISO8583_MSG_Free ( DL_ISO8583_MSG *ioMsg )
         
         for ( i=0; i<=kDL_ISO8583_MAX_FIELD_IDX ; i++ ) {
             /* free memory (if allocated) */
+            //printf("field[%d]:%p\n", i, ioMsg->field[i].ptr);
             DL_MEM_free(ioMsg->field[i].ptr);
         } /* end-for(i) */
     }

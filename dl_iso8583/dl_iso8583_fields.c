@@ -499,6 +499,10 @@ DL_ERR _packLenAscii(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr)
     DL_UINT8  *tmpPtr = *ioPtr;
     DL_UINT8 i = 0;
 
+    if (iVarLenLen <= 0) {
+        return kDL_ERR_OTHER;
+    }
+    
     for (i = iVarLenLen; i > 0; i--, iVarLen /= 10) {
         tmpPtr[i - 1] = '0' + iVarLen % 10;
     }
@@ -670,7 +674,7 @@ DL_ERR _packBcdLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, D
         return kDL_ERR_OTHER;
     }
 
-    //padding
+    //init and set padding
     memset(tmpPtr, 0, iOutLen / 2);
     
     for (i = 0; i < iDataLen; i++) {
@@ -730,6 +734,8 @@ DL_ERR _packLenBcdRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr
     DL_UINT32 lenTmp = iVarLen;
     DL_UINT8 *tmpPtr = *ioPtr + iVarLenLen - 1;  // point to last bcd's byte
 
+    memset(tmpPtr, 0, iVarLenLen);
+    
     for (i = 0; i < iDigitNum; i++, lenTmp /= 10) {
         if (i % 2) {
             *tmpPtr-- += ((lenTmp % 10) << 4);
@@ -755,7 +761,7 @@ DL_ERR _packBcdRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, 
         return kDL_ERR_OTHER;
     }
 
-    //padding
+    //init and set padding
     memset(tmpPtr, 0, iOutLen / 2);
     
     for (i = 0; i < iDataLen; i++) {
@@ -893,6 +899,9 @@ DL_ERR _packLenNibbleRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **io
     DL_ERR err = kDL_ERR_NONE;
     DL_UINT8 *tmpPtr = *ioPtr + iVarLenLen - 1;
 
+    //init and set padding
+    memset(*ioPtr, 0, iVarLenLen);
+    
     *ioPtr += iVarLenLen;
     
     while (iVarLenLen-- > 0) {
