@@ -46,7 +46,7 @@ int main ( void )
 #endif
 
     /* set ISO message fields */
-    (void)DL_ISO8583_MSG_SetField_Str(0,"08001",&isoMsg);
+    (void)DL_ISO8583_MSG_SetField_Str(0,"0800",&isoMsg);
     (void)DL_ISO8583_MSG_SetField_Str(2,"454000000000003",&isoMsg);
     (void)DL_ISO8583_MSG_SetField_Str(3,"000000",&isoMsg);
     (void)DL_ISO8583_MSG_SetField_Str(11,"002001",&isoMsg);

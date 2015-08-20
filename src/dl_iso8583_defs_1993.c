@@ -166,10 +166,9 @@ static DL_ISO8583_FIELD_DEF _iso8583_1993_fields[] = {
 
 void DL_ISO8583_DEFS_1993_GetHandler ( DL_ISO8583_HANDLER *oHandler )
 {
-        DL_ISO8583_COMMON_SetHandler(
-            _iso8583_1993_fields,
-            (DL_UINT8)(sizeof(_iso8583_1993_fields)/sizeof(DL_ISO8583_FIELD_DEF)),
-            oHandler);
+    DL_ISO8583_COMMON_SetHandler(_iso8583_1993_fields,
+                                 (DL_UINT8)(sizeof(_iso8583_1993_fields)/sizeof(DL_ISO8583_FIELD_DEF)),
+                                 oHandler);
     return;
 }
 

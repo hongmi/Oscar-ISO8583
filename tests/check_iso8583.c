@@ -46,7 +46,7 @@ START_TEST(test_1)
     (void)DL_ISO8583_MSG_SetField_Str(125,"BLAH BLAH",&isoMsg);
 
     /* output ISO message content */
-    //DL_ISO8583_MSG_Dump(stdout,NULL,&isoHandler,&isoMsg);
+    DL_ISO8583_MSG_Dump(stdout,NULL,&isoHandler,&isoMsg);
 
     /* pack ISO message */
     (void)DL_ISO8583_MSG_Pack(&isoHandler,&isoMsg,packBuf,&packedSize);
@@ -55,7 +55,7 @@ START_TEST(test_1)
     DL_ISO8583_MSG_Free(&isoMsg);
 
     /* output packed message (in hex) */
-    //DL_OUTPUT_Hex(stdout,NULL,packBuf,packedSize);
+    DL_OUTPUT_Hex(stdout,NULL,packBuf,packedSize);
 
     //
     // Unpack message
@@ -68,7 +68,7 @@ START_TEST(test_1)
     (void)DL_ISO8583_MSG_Unpack(&isoHandler,packBuf,packedSize,&isoMsg);
     
     /* output ISO message content */
-    //DL_ISO8583_MSG_Dump(stdout,NULL,&isoHandler,&isoMsg);
+    DL_ISO8583_MSG_Dump(stdout,NULL,&isoHandler,&isoMsg);
 
     /* free ISO message */
     DL_ISO8583_MSG_Free(&isoMsg);

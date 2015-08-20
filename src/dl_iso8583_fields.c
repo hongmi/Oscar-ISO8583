@@ -242,19 +242,19 @@ DL_ERR _DL_ISO8583_FIELD_Pack ( DL_UINT16                  iField,
     DL_UINT32             outLen        = fieldDefPtr->len; //len of the packed field in field unit, include padding
 
     if (inLen > outLen) {  //too long input
-        return kDL_ERR_OTHER;
+        err = kDL_ERR_PACK_FLD_TOO_LONG;
     }
     
-    if (DL_ISO8583_IS_BITMAP(fieldDefPtr->fieldType)) {
+    if (!err && DL_ISO8583_IS_BITMAP(fieldDefPtr->fieldType)) {
         err = _pack_iso_BITMAP(iField, iMsg, fieldDefPtr, ioPtr);
-        return err;
+        return err ? MAKE_FLD_ERR(iField, err) : err;
     }
 
-    if (fieldDefPtr->varLenLen > 0) {
+    if (!err && fieldDefPtr->varLenLen > 0) {
         /* variable length handling */
         err = VarLen_Put(fieldDefPtr->varLenLen, fieldDefPtr->varLenType, inLen, &outLen, &tmpPtr);
     } 
-    if (DL_ISO8583_IS_PARTIAL_TYPE(fieldDefPtr->fieldType)) {  //partial byte need padding
+    if (!err && DL_ISO8583_IS_PARTIAL_TYPE(fieldDefPtr->fieldType)) {  //partial byte need padding
         outLen += outLen % 2;
     }
     
@@ -265,7 +265,7 @@ DL_ERR _DL_ISO8583_FIELD_Pack ( DL_UINT16                  iField,
     
     *ioPtr = tmpPtr;
     
-    return err;
+    return err ? MAKE_FLD_ERR(iField, err) : err;
 }
 
 /******************************************************************************/
@@ -285,11 +285,13 @@ DL_ERR _DL_ISO8583_FIELD_Unpack ( DL_UINT16                  iField,
 
     if (DL_ISO8583_IS_BITMAP(fieldDefPtr->fieldType)) {
         err = _unpack_iso_BITMAP(iField, ioMsg, fieldDefPtr, ioPtr);
-        return err;
+        return err ? MAKE_FLD_ERR(iField, err) : err;
     }
     
     /* variable length handling */
-    err = VarLen_Get(&tmpPtr, fieldDefPtr->varLenLen, fieldDefPtr->varLenType, fieldDefPtr->len, &size);
+    if (!err) {
+        err = VarLen_Get(&tmpPtr, fieldDefPtr->varLenLen, fieldDefPtr->varLenType, fieldDefPtr->len, &size);
+    }
 
     /* allocate field */
     if ( !err ) {
@@ -304,7 +306,7 @@ DL_ERR _DL_ISO8583_FIELD_Unpack ( DL_UINT16                  iField,
 
     *ioPtr = tmpPtr;
 
-    return err;    
+    return err ? MAKE_FLD_ERR(iField, err) : err;
 }
 
 DL_ERR _pack_iso_BITMAP ( DL_UINT16                    iField,
@@ -319,8 +321,7 @@ DL_ERR _pack_iso_BITMAP ( DL_UINT16                    iField,
 
     /* for each possible bitmap segment */
     for ( i=0 ; i<((kDL_ISO8583_MAX_FIELD_IDX-iField+1)+63)/64 ; i++ ) {
-        DL_UINT32 ms=0,
-                ls=0;
+        DL_UINT32 ms=0, ls=0;
         int       j;
 
         /* move to next field */
@@ -378,53 +379,52 @@ DL_ERR _unpack_iso_BITMAP ( DL_UINT16                    iField,
     DL_UINT8  *tmpPtr = *ioPtr;
     DL_UINT32 i = 0;
 
-    {
-        DL_UINT16 curFieldIdx = iField;
+    DL_UINT16 curFieldIdx = iField;
 
-        /* for each bitmap segment (8 bytes) */
-        while(i<(((kDL_ISO8583_MAX_FIELD_IDX-iField+1)+63)/64)) {
-            DL_UINT32 ms,ls;
-            int       j;
+    /* for each bitmap segment (8 bytes) */
+    while(i<(((kDL_ISO8583_MAX_FIELD_IDX-iField+1)+63)/64)) {
+        DL_UINT32 ms,ls;
+        int       j;
+        
+        /* get bitmap segment (8 bytes) */
+        ms = DL_BYTES_TO_UINT32(tmpPtr);
+        ls = DL_BYTES_TO_UINT32(tmpPtr+4);
+        tmpPtr += 8;
+        
+        /* move to next field */
+        if(i == 0)
+            curFieldIdx++;
 
-            /* get bitmap segment (8 bytes) */
-            ms = DL_BYTES_TO_UINT32(tmpPtr);
-            ls = DL_BYTES_TO_UINT32(tmpPtr+4);
-            tmpPtr += 8;
+        /* ms part */
+        for ( j=30 + i ; j>=0 ; j--,curFieldIdx++ ) {
+            if ( DL_BIT_TEST(ms,j) ) {
+                if ( curFieldIdx > kDL_ISO8583_MAX_FIELD_IDX )
+                    return kDL_ERR_UNPACK_BMP;
 
-            /* move to next field */
-            if(i == 0)
-                curFieldIdx++;
-
-            /* ms part */
-            for ( j=30 + i ; j>=0 ; j--,curFieldIdx++ ) {
-                if ( DL_BIT_TEST(ms,j) ) {
-                    if ( curFieldIdx > kDL_ISO8583_MAX_FIELD_IDX )
-                        return kDL_ERR_OTHER;
-
-                    /* set length to non-zero value to indicate field presence */
-                    ioMsg->field[curFieldIdx].len = 1;
-                }
-            } /* end-for(j) */
-
-            /* ls part */
-            for ( j=31 ; j>=0 ; j--,curFieldIdx++ ) {
-                if ( DL_BIT_TEST(ls,j) ) {
-                    if ( curFieldIdx > kDL_ISO8583_MAX_FIELD_IDX )
-                        return kDL_ERR_OTHER;
-
-                    /* set length to non-zero value to indicate field presence */
-                    ioMsg->field[curFieldIdx].len = 1;
-                }
-            } /* end-for(j) */
-
-            /* stop if no more bitmap segments */
-            if( i == 0) {
-                if ( 0 == DL_BIT_TEST(ms,31) )
-                    break;
+                /* set length to non-zero value to indicate field presence */
+                ioMsg->field[curFieldIdx].len = 1;
             }
-            i++;
+        } /* end-for(j) */
+
+        /* ls part */
+        for ( j=31 ; j>=0 ; j--,curFieldIdx++ ) {
+            if ( DL_BIT_TEST(ls,j) ) {
+                if ( curFieldIdx > kDL_ISO8583_MAX_FIELD_IDX )
+                    return kDL_ERR_UNPACK_BMP;
+                
+                /* set length to non-zero value to indicate field presence */
+                ioMsg->field[curFieldIdx].len = 1;
+            }
+        } /* end-for(j) */
+        
+        /* stop if no more bitmap segments */
+        if( i == 0) {
+            if ( 0 == DL_BIT_TEST(ms,31) )
+                break;
         }
+        i++;
     }
+
 
     *ioPtr = tmpPtr;
 
@@ -500,7 +500,7 @@ DL_ERR _packLenAscii(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr)
     DL_UINT8 i = 0;
 
     if (iVarLenLen <= 0) {
-        return kDL_ERR_OTHER;
+        return kDL_ERR_PACK_ASCII_LEN;
     }
     
     for (i = iVarLenLen; i > 0; i--, iVarLen /= 10) {
@@ -518,7 +518,7 @@ DL_ERR _packAscii(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_
     DL_ERR err = kDL_ERR_NONE;
     
     if (iDataLen > iOutLen) {
-        err = kDL_ERR_OTHER;
+        err = kDL_ERR_PACK_ASCII;
     } else {
         memcpy(*ioPtr, iDataPtr, iDataLen);
         if (iDataLen < iOutLen) {
@@ -579,7 +579,7 @@ DL_ERR _packEbcdic(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL
     DL_UINT32 i = 0;
     
     if (iDataLen > iOutLen) {
-        err = kDL_ERR_OTHER;
+        err = kDL_ERR_PACK_EBCDIC;
     } else {
         memcpy(*ioPtr, iDataPtr, iDataLen);
         if (iDataLen < iOutLen) {
@@ -604,11 +604,10 @@ DL_ERR _unpackLenEbcdic(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen)
     DL_UINT32 len = 0;
     
     for (i = 0; i < iVarLenLen; i++) {
-        len = len * 10 + E2A[*(*ioPtr)]++ - '0';
+        len = len * 10 + E2A[*(*ioPtr++)] - '0';
     }
 
     *oLen = len;
-    
     return err;    
 }
 
@@ -624,6 +623,7 @@ DL_ERR _unpackEbcdic(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPtr)
     }
     
     *ioDataPtr += iSize;
+    *ioPtr += iSize;
     return err;
 }
 
@@ -671,7 +671,7 @@ DL_ERR _packBcdLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, D
 
     //check out space is double nibbles
     if (iOutLen % 2) {
-        return kDL_ERR_OTHER;
+        return kDL_ERR_PACK_BCDL;
     }
 
     //init and set padding
@@ -758,7 +758,7 @@ DL_ERR _packBcdRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, 
 
     //check out space is double nibbles
     if (iOutLen % 2) {
-        return kDL_ERR_OTHER;
+        return kDL_ERR_PACK_BCDR;
     }
 
     //init and set padding
@@ -835,7 +835,7 @@ DL_ERR _packNibbleLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen
     
     //check out space is double nibbles
     if (iOutLen % 2) {
-        return kDL_ERR_OTHER;
+        return kDL_ERR_PACK_NIBBLEL;
     }
 
     //padding
@@ -922,7 +922,7 @@ DL_ERR _packNibbleRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLe
     
     //check out space is double nibbles
     if (iOutLen % 2) {
-        return kDL_ERR_OTHER;
+        return kDL_ERR_PACK_NIBBLER;
     }
 
     //padding
@@ -953,7 +953,7 @@ DL_ERR _unpackLenNibbleRight(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *o
     DL_UINT32 i = 0;
     
     if (iVarLenLen > 4) {
-        return kDL_ERR_OTHER;
+        return kDL_ERR_UNPACK_NIBBLE_LEN;
     }
 
     *ioPtr += iVarLenLen;
@@ -992,9 +992,7 @@ DL_ERR _unpackNibbleRight(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPt
     *ioPtr += (iSize + 1) / 2;
     *ioDataPtr += iSize;
     return err;
-
 }
-
 
 DL_ERR _packLenByte(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr)
 {
@@ -1008,7 +1006,7 @@ DL_ERR _packByte(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_U
     DL_ERR err = kDL_ERR_NONE;
     
     if (iDataLen > iOutLen) {
-        err = kDL_ERR_OTHER;
+        err = kDL_ERR_PACK_BYTE;
     } else {
         memcpy(*ioPtr, iDataPtr, iDataLen);
         if (iDataLen < iOutLen) {
@@ -1033,7 +1031,7 @@ DL_ERR _unpackByte(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPtr)
     memcpy(*ioDataPtr, *ioPtr, iSize);
 
     *ioDataPtr += iSize;
-
+    *ioPtr += iSize;
     return err;
 }
 

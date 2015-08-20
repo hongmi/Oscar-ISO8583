@@ -198,7 +198,7 @@ DL_ERR DL_ISO8583_MSG_Pack ( const DL_ISO8583_HANDLER *iHandler,
     *oNumBytes = 0;
 
     /* pack any fields that are present */
-    for ( fieldIdx=0 ; (fieldIdx<MIN(iHandler->fieldItems,kDL_ISO8583_MAX_FIELD_IDX+1)) && !err ; fieldIdx++ ) {
+    for ( fieldIdx=0 ; (fieldIdx<MIN(iHandler->fieldItems + 1,kDL_ISO8583_MAX_FIELD_IDX+1)) && !err ; fieldIdx++ ) {
         if ( (NULL != iMsg->field[fieldIdx].ptr) || // present
              DL_ISO8583_IS_BITMAP(iHandler->fieldArr[fieldIdx].fieldType) ) { // bitmap
             /* pack field */
@@ -225,7 +225,7 @@ DL_ERR DL_ISO8583_MSG_Unpack ( const DL_ISO8583_HANDLER *iHandler,
     DL_UINT8  *curPtr      = (DL_UINT8*)iByteArr;
     DL_UINT8  *endPtr      = curPtr + iByteArrSize;
     DL_UINT16  curFieldIdx = 0;
-    DL_UINT16  maxFieldIdx = MIN(kDL_ISO8583_MAX_FIELD_IDX + 1, iHandler->fieldItems);
+    DL_UINT16  maxFieldIdx = MIN(kDL_ISO8583_MAX_FIELD_IDX + 1, iHandler->fieldItems + 1);
     int        haveBitmap  = 0;
 
     /* unpack all fields until we've encountered a bitmap field */

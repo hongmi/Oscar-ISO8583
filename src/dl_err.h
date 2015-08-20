@@ -50,6 +50,28 @@ typedef DL_UINT32       DL_ERR;
 
 /******************************************************************************/
 //
+// Pack/Unpack error codes
+//
+
+//pack/unpack error code : kDL_ERR_FLD_BASE + field_no + error_code 
+#define kDL_ERR_FLD_BASE                                (DL_ERR)100000
+
+#define MAKE_FLD_ERR(fld_no, error_code) (DL_ERR)(kDL_ERR_FLD_BASE + (fld_no) + (error_code))
+
+#define kDL_ERR_PACK_NIBBLER                            (DL_ERR)1
+#define kDL_ERR_PACK_NIBBLEL                            (DL_ERR)2
+#define kDL_ERR_PACK_BCDR                               (DL_ERR)3
+#define kDL_ERR_PACK_BCDL                               (DL_ERR)4
+#define kDL_ERR_PACK_EBCDIC                             (DL_ERR)5
+#define kDL_ERR_PACK_ASCII                              (DL_ERR)6
+#define kDL_ERR_PACK_ASCII_LEN                          (DL_ERR)7
+#define kDL_ERR_UNPACK_BMP                              (DL_ERR)8
+#define kDL_ERR_PACK_FLD_TOO_LONG                       (DL_ERR)9
+#define kDL_ERR_UNPACK_NIBBLE_LEN                       (DL_ERR)10
+#define kDL_ERR_PACK_BYTE                               (DL_ERR)11
+
+/******************************************************************************/
+//
 // ALLOCATED ERROR CODES
 //
 

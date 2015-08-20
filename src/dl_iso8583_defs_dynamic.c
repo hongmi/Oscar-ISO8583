@@ -168,7 +168,8 @@ void DL_ISO8583_DEFS_DYNAMIC_GetHandler ( DL_ISO8583_HANDLER *oHandler,
                                           DL_ISO8583_FIELD_DEF *iFieldDefArr,
                                           DL_UINT8 iFieldDefItems)
 {
-
+    DL_ISO8583_COMMON_SetHandler(iFieldDefArr, iFieldDefItems, oHandler);
+    return;
 }
 
 /******************************************************************************/
