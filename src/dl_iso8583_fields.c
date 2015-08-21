@@ -604,7 +604,7 @@ DL_ERR _unpackLenEbcdic(DL_UINT8 **ioPtr, DL_UINT8 iVarLenLen, DL_UINT32 *oLen)
     DL_UINT32 len = 0;
     
     for (i = 0; i < iVarLenLen; i++) {
-        len = len * 10 + E2A[*(*ioPtr++)] - '0';
+        len = len * 10 + E2A[*(*ioPtr)++] - '0';
     }
 
     *oLen = len;
@@ -734,7 +734,7 @@ DL_ERR _packLenBcdRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **ioPtr
     DL_UINT32 lenTmp = iVarLen;
     DL_UINT8 *tmpPtr = *ioPtr + iVarLenLen - 1;  // point to last bcd's byte
 
-    memset(tmpPtr, 0, iVarLenLen);
+    memset(*ioPtr, 0, iVarLenLen);
     
     for (i = 0; i < iDigitNum; i++, lenTmp /= 10) {
         if (i % 2) {
@@ -762,7 +762,7 @@ DL_ERR _packBcdRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, 
     }
 
     //init and set padding
-    memset(tmpPtr, 0, iOutLen / 2);
+    memset(*ioPtr, 0, iOutLen / 2);
     
     for (i = 0; i < iDataLen; i++) {
         if (i % 2) {
@@ -855,7 +855,7 @@ DL_ERR _packNibbleLeft(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen
         iDataPtr++;
     }
     
-    *ioPtr = tmpPtr;
+    *ioPtr += iOutLen / 2;
     return err;
 }
 
@@ -915,8 +915,8 @@ DL_ERR _packLenNibbleRight(DL_UINT32 iVarLen, DL_UINT8 iVarLenLen, DL_UINT8 **io
 DL_ERR _packNibbleRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLen, DL_UINT8 **ioPtr)
 {
     DL_ERR err = kDL_ERR_NONE;
-    DL_UINT8 *tmpPtr = *ioPtr + iOutLen / 2;
-    DL_UINT8 *iDataTmpPtr = iDataPtr + (iDataLen - 1) / 2;
+    DL_UINT8 *tmpPtr = *ioPtr + iOutLen / 2 - 1;
+    DL_UINT8 *iDataTmpPtr = iDataPtr + iDataLen - 1;
     DL_UINT8 i = 0;
     DL_UINT8 tmpN = 0;
     
@@ -926,18 +926,18 @@ DL_ERR _packNibbleRight(DL_UINT8 *iDataPtr, DL_UINT32 iDataLen, DL_UINT32 iOutLe
     }
 
     //padding
-    memset(tmpPtr, 0, iOutLen / 2);
+    memset(*ioPtr, 0, iOutLen / 2);
     
-    for (i = 0; i < iDataLen; i++, iDataPtr++) {
-        if (*iDataPtr >= 'A')
-            tmpN = *iDataPtr - 'A' + 10;
+    for (i = 0; i < iDataLen; i++, iDataTmpPtr--) {
+        if (*iDataTmpPtr >= 'A')
+            tmpN = *iDataTmpPtr - 'A' + 10;
         else
-            tmpN = *iDataPtr - '0';
+            tmpN = *iDataTmpPtr - '0';
 
         if (i % 2) {
-            *tmpPtr-- += tmpN & 0x0F ;
+            *tmpPtr-- += (tmpN << 4) & 0xF0 ;
         } else {
-            *tmpPtr += (tmpN << 4) & 0xF0;
+            *tmpPtr += tmpN & 0x0F;
         }
     }
     
@@ -978,9 +978,9 @@ DL_ERR _unpackNibbleRight(DL_UINT8 **ioPtr, DL_UINT32 iSize, DL_UINT8 **ioDataPt
     
     for (i = 0; i < iSize; i++) {
         if (i % 2) {
-            tmpN = *tmpPtr-- & 0x0F;
+            tmpN = (*tmpPtr-- >> 4) & 0x0F;
         } else {
-            tmpN = (*tmpPtr >> 4) & 0x0F;
+            tmpN = *tmpPtr & 0x0F;
         }
         if (tmpN >= 0x0A) {
             *tmpDataPtr-- = tmpN - 0x0A + 'A';
